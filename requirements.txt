@@ -1,0 +1,15 @@
+# Runtime/production dependencies
+
+# Data processing 
+numpy==2.3.4
+pandas==2.3.3
+python-dotenv==1.2.1
+
+# Database
+SQLAlchemy==2.0.44
+
+# Request handling
+requests==2.32.5
+
+# Web framework
+streamlit==1.50.0

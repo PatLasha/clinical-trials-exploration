@@ -1,0 +1,13 @@
+# Development dependencies and tools.
+
+# Install runtime dependencies for tests
+-r requirements.txt
+
+# Validation
+great_expectations==1.8.0
+
+# Code quality
+black==25.9.0
+isort==7.0.0
+flake8==7.3.0
+pre_commit==4.3.0

@@ -2,10 +2,10 @@ import os
 
 from dotenv import load_dotenv
 from sqlalchemy import Engine, create_engine, text
-from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
+from sqlalchemy.orm import sessionmaker
 
 class DBConnection:
     """

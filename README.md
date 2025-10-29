@@ -176,10 +176,26 @@ python scripts/init_db.py
 python scripts/db_connection.py
 ```
 
-### TO DO
+## Design Decision Breakdown
+
+### Data Processing
+- **Pandas** I chose it as a csv processing tool for its powerful DataFrame API and I have used it before, so I can fit into time constraints.
+
+### Database
+- **PostgreSQL** I chose to set it up locally using Docker for ease of setup and consistency across environments and it's pretty easy to scale later if needed, although for production a managed cloud DB would be better.
+- **SQLAlchemy** I chose to use ORM for database interactions to abstract away raw SQL and improve maintainability and I can easily switch to another database backend if needed, although I would need to update the connection strings and possibly some queries.
+
+### Web Framework
+- **Streamlit** it seems like a good fit for quickly building data exploration UIs and dashboards with minimal code.
+
+## Time Alocation Breakdown
+- Initial Setup & Research: 2-3 hours
+- Database Schema Design & Setup: 4 hours (setting up PostgreSQL with Docker and creating schemas took some time, as I had to learn Docker basics)
+
+### Future Improvements / TODOs
 - Finish implementing configs, for logging and for environment variable handling
 - Change logging statements throughout the codebase to use the logging module (moving logs to a file would be a good start)
 - Add unit tests
-- Improve error handling and validation
+- Improve error handling and add validation
 - Create data ingestion and processing scripts
 - Create Streamlit app for data exploration and visualization

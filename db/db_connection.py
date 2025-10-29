@@ -11,7 +11,6 @@ class DBConnection:
     """
     def __init__(self):
         self.engine = create_engine(os.environ.get("DB_URL"))
-        print(f"Database engine created with URL: {os.environ.get('DB_URL')}")
         # Create a configured "Session" class
         self.LocalSession = sessionmaker(bind=self.engine)
 

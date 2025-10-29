@@ -16,7 +16,7 @@ def init_db():
     sql_file_paths = [
         "db/schemas/create_schemas.sql",
         "db/schemas/create_staging_tables.sql",
-        "db/schemas/create_staging_tables.sql",
+        "db/schemas/create_processed_tables.sql",
     ]
 
     for sql_file in sql_file_paths:

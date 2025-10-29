@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS processed.standard_age (
 
 -- Bridge table for study age groups, as some studies can have multiple age groups
 CREATE TABLE IF NOT EXISTS processed.study_age_groups (
-    study_id INTEGER REFERENCES processed.clinical_trials(trial_id),
+    study_id INTEGER REFERENCES processed.studies(study_id),
     age_group_id INTEGER REFERENCES processed.standard_age(id),
     PRIMARY KEY (study_id, age_group_id)
 );

@@ -2,10 +2,10 @@ import os
 
 from dotenv import load_dotenv
 from sqlalchemy import Engine, create_engine, text
+from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-from sqlalchemy.orm import sessionmaker
 
 class DBConnection:
     """
@@ -16,9 +16,7 @@ class DBConnection:
         self.db_url = os.environ.get("DB_URL")
 
         if not self.db_url:
-            raise RuntimeError(
-                "DB_URL environment variable is not set. Cannot connect to the database."
-            )
+            raise RuntimeError("DB_URL environment variable is not set. Cannot connect to the database.")
         self.engine = create_engine(self.db_url)
         # Create a configured "Session" class
         self.LocalSession = sessionmaker(bind=self.engine)

@@ -1,14 +1,17 @@
 import os
+
+from dotenv import load_dotenv
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
 
 load_dotenv()
+
 
 class DBConnection:
     """
     Database connection class to manage connections to the PostgreSQL database.
     """
+
     def __init__(self):
         self.engine = create_engine(os.environ.get("DB_URL"))
         # Create a configured "Session" class
@@ -19,7 +22,6 @@ class DBConnection:
 
     def get_session(self) -> sessionmaker:
         return self.LocalSession()
-    
 
     def execute_sql_file(self, file_path: str):
         """
@@ -27,10 +29,12 @@ class DBConnection:
         :param file_path: Path to the SQL file.
         """
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 sql_commands = f.read()
 
-            raw_conn = self.engine.raw_connection() # Get raw connection for executing multiple statements
+            raw_conn = (
+                self.engine.raw_connection()
+            )  # Get raw connection for executing multiple statements
             try:
                 cursor = raw_conn.cursor()
                 cursor.execute(sql_commands)
@@ -55,7 +59,7 @@ class DBConnection:
             print(f"Database connection failed: {e}")
             return False
 
+
 if __name__ == "__main__":
     db = DBConnection()
     db.test_connection()
-    

@@ -8,7 +8,7 @@ repos:
         description: "Check Python code formatting using Black"
 
   # isort import sorter
-  - repo: https://github.com/pre-commit/mirrors-isort
+  - repo: https://github.com/pycqa/isort
     rev: 7.0.0 # Use the same version as in requirements-dev.txt
     hooks:
       - id: isort
@@ -17,7 +17,7 @@ repos:
         args: ["--profile", "black", "--line-length", "120"]
 
   # Flake8 linter
-  - repo: https://gitlab.com/pycqa/flake8
+  - repo: https://github.com/pycqa/flake8
     rev: 7.3.0 # Use the same version as in requirements-dev.txt
     hooks:
       - id: flake8
@@ -39,4 +39,4 @@ repos:
         language: system
         types: [python]
         always_run: true
-        stages: [commit]
+        stages: [pre-commit]

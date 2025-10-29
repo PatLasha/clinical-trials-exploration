@@ -48,10 +48,11 @@ streamlit run path/to/your_app.py
 ## TO DO
 - Finish implementing configs, for logging and for environment variable handling
 - Change logging statements throughout the codebase to use the logging module (moving logs to a file would be a good start)
-- add .env.example setup instructions
+- Add .env.example setup instructions
+- Add pre-commit setup
 - Add instructions for setting up and running the PostgreSQL database (locally and via Docker)
 - Add instructions for initializing the database schema
-- Add unit and integration tests
+- Add unit tests
 - Improve error handling and validation
 - Create data ingestion and processing scripts
 - Create Streamlit app for data exploration and visualization

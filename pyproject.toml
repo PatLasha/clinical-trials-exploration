@@ -1,7 +1,7 @@
 [tool.black]
 line-length = 120
-target-version = ['py312']
-skip-string-normalization = true
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'  # include Python files
 
 # directories to exclude from formatting
 exclude = '''
@@ -27,3 +27,7 @@ skip = [
     ".git",
     "__pycache__"
 ]
+
+[tool.coverage.run]
+branch = true
+source = ["tests"]

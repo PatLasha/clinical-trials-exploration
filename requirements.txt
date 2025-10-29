@@ -1,7 +1,6 @@
 # Runtime/production dependencies
 
-# Data processing 
-numpy==2.3.4
+# Data processing
 pandas==2.3.3
 python-dotenv==1.2.1
 

@@ -1,3 +1,7 @@
+# Disclaimer
+
+This project and even this readme is made using AI tools (mainly GitHub Copilot, Claude Sonnet 4 (and 4.5), Chat GPT-5) and is a work in progress and may contain incomplete sections, placeholders, or areas marked as "TO DO" that require further development.
+
 # clinical-trials-exploration
 
 Exploring public clinical trials dataset as a part of the DE tech challenge.
@@ -6,15 +10,15 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        DATA SOURCES LAYER                        │
+│                        DATA SOURCES LAYER                       │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │   CSV Files     │   JSON API      │   SQL Database              │
-│  (Local/S3)     │ (ClinicalTrials)│   (PostgreSQL)              │
+│     (Local)     │ (ClinicalTrials)│   (PostgreSQL)              │
 └────────┬────────┴────────┬────────┴──────────┬──────────────────┘
          │                 │                    │
          v                 v                    v
 ┌─────────────────────────────────────────────────────────────────┐
-│                    INGESTION LAYER (Python)                      │
+│                    INGESTION LAYER (Python)                     │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │  CSV Loader     │  API Connector  │  DB Connector               │
 │  (pandas)       │  (requests)     │  (SQLAlchemy)               │
@@ -22,14 +26,14 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
          │                 │                    │
          v                 v                    v
 ┌─────────────────────────────────────────────────────────────────┐
-│                   STAGING LAYER (Raw Zone)                       │
-│                    PostgreSQL - staging schema                   │
-│              Tables: raw_studies, raw_interventions, etc.        │
+│                   STAGING LAYER (Raw Zone)                      │
+│                    PostgreSQL - staging schema                  │
+│              Tables: raw_studies, raw_interventions, etc.       │
 └──────────────────────────────┬──────────────────────────────────┘
                                │
                                v
 ┌─────────────────────────────────────────────────────────────────┐
-│              TRANSFORMATION & VALIDATION LAYER                   │
+│              TRANSFORMATION & VALIDATION LAYER                  │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │ Data Cleaning   │  Validation     │  Enrichment                 │
 │ - Nulls         │  - Integrity    │  - Standardization          │
@@ -39,14 +43,14 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
          │                 │                    │
          v                 v                    v
 ┌─────────────────────────────────────────────────────────────────┐
-│                 PROCESSED LAYER (Gold Zone)                      │
-│                PostgreSQL - processed schema                     │
-│         Normalized Tables: studies, interventions, etc.          │
+│                 PROCESSED LAYER (Gold Zone)                     │
+│                PostgreSQL - processed schema                    │
+│         Normalized Tables: studies, interventions, etc.         │
 └──────────────────────────────┬──────────────────────────────────┘
                                │
                                v
 ┌─────────────────────────────────────────────────────────────────┐
-│                    ANALYTICS LAYER                               │
+│                    ANALYTICS LAYER                              │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │  Aggregations   │  Metrics Tables │  Reports                    │
 │  (Materialized  │  (Pre-computed) │  (SQL Views)                │
@@ -55,8 +59,8 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
          │                 │                    │
          v                 v                    v
 ┌─────────────────────────────────────────────────────────────────┐
-│                   PRESENTATION LAYER                             │
-│                   Streamlit Web Interface                        │
+│                   PRESENTATION LAYER                            │
+│                   Streamlit Web Interface                       │
 │              Dashboard | Data Upload | Analytics                │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -77,38 +81,21 @@ This repository contains a clinical-trial data pipeline and UI. Below are recomm
 
 ## Quick start (recommended: use a virtual environment)
 
-1. From project root:
-\`\`\`bash
-# create a backup of the old requirements if you haven't already
-cp requirements.txt requirements.txt.bak
-\`\`\`
-
-2. Create & activate a virtualenv (Linux/macOS):
-\`\`\`bash
+1. Create & activate a virtualenv (Linux/macOS):
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-\`\`\`
+```
 
-3. Install runtime deps (for deploying or running the app):
-\`\`\`bash
+2. Install runtime deps (for deploying or running the app):
+```bash
 pip install -r requirements.txt
-\`\`\`
+```
 
-4. Install development deps (for development, linting, tests):
-\`\`\`bash
+3. Install development deps (for development, linting, tests):
+```bash
 pip install -r requirements-dev.txt
-\`\`\`
-
-## Running locally
-- Streamlit app (if present):
-\`\`\`bash
-streamlit run path/to/your_app.py
-\`\`\`
-
-## Notes & recommendations
-- \`great_expectations\` is in \`requirements-dev.txt\` because it's often used in development/CI to validate data. If you need it in production pipelines, move it to \`requirements.txt\`.
-- For reproducible deployments, consider using a constraints file or \`pip-compile\` to lock transitive dependency versions.
-- Keep dev tools (black, isort, pre-commit, flake8) in \`requirements-dev.txt\` or prefer a \`pyproject.toml\` + dev extras if you migrate to Poetry or pip-tools later.
+```
 
 ## Environment Setup
 

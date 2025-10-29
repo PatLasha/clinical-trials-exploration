@@ -13,7 +13,13 @@ class DBConnection:
     """
 
     def __init__(self):
-        self.engine = create_engine(os.environ.get("DB_URL"))
+        self.db_url = os.environ.get("DB_URL")
+
+        if not self.db_url:
+            raise RuntimeError(
+                "DB_URL environment variable is not set. Cannot connect to the database."
+            )
+        self.engine = create_engine(self.db_url)
         # Create a configured "Session" class
         self.LocalSession = sessionmaker(bind=self.engine)
 

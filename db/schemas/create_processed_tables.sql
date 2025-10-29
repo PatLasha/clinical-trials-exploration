@@ -1,6 +1,6 @@
 -- Create processed table for cleaned clinical trials data
 
--- Normalized and cleaned data from staging.raw_clinical_trials
+-- Normalized and cleaned data from staging.raw_studies will be stored here
 
 -- This seemed to be too much for me right now, so leaving it out for the time being
 -- CREATE TYPE processed.org_class_enum AS ENUM (

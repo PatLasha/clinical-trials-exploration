@@ -5,6 +5,7 @@ from db.db_connection import DBConnection
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 def init_db():
     db = DBConnection()
 

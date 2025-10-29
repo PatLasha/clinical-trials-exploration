@@ -1,5 +1,9 @@
-data/*
 !data/notebooks/
+data/processed/*
+!data/processed/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+db_data/
 *.pyc
 __pycache__/
 .env

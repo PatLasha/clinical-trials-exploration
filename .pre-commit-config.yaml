@@ -1,13 +1,4 @@
 repos:
-  # Basic file hygiene
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 4.3.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-
   # Black format checker
   - repo: https://github.com/psf/black
     rev: 25.9.0 # Use the same version as in requirements-dev.txt
@@ -15,7 +6,6 @@ repos:
       - id: black
         name: black-format-checker
         description: "Check Python code formatting using Black"
-        language_version: python3.12
 
   # isort import sorter
   - repo: https://github.com/pre-commit/mirrors-isort
@@ -25,7 +15,6 @@ repos:
         name: isort-import-sorter
         description: "Sort Python imports using isort"
         args: ["--profile", "black", "--line-length", "120"]
-        language_version: python3.12
 
   # Flake8 linter
   - repo: https://gitlab.com/pycqa/flake8
@@ -38,7 +27,6 @@ repos:
         ]
         name: flake8-linter
         description: "Lint Python code with Flake8"
-        language_version: python3.12
 
   # Custom hook to run tests with coverage
   - repo: local

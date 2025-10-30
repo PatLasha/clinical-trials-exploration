@@ -17,11 +17,11 @@ class AppConfig:
     """
 
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
         try:
             self._validate_required_env_vars()
             self.settings = self._create_settings()
             self.setup_logging()
-            self.logger = logging.getLogger(__name__)
         except Exception as e:
             self.logger.error(f"Failed to initialize AppConfig: {e}")
             raise

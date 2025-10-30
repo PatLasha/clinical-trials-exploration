@@ -31,26 +31,17 @@ class CSVToStagingLoader:
         self.logger = logging.getLogger(__name__)
 
         # Initialize database connection and parser
-        self._initialize_database_connection()
+        if self.db.test_connection():
+            self.logger.info("Database connection successful.")
+        else:
+            self.logger.error("Database connection failed.")
+            raise SystemExit(1)
         self.parser = StudiesCSVParser(settings.file_path, settings.chunk_size)
 
         # Get existing row_ids for backfill logic
         self.existing_row_ids = set()
-        if settings.enable_backfill:
+        if self.settings.enable_backfill:
             self.existing_row_ids = self._get_existing_row_ids()
-
-    def _initialize_database_connection(self) -> DBConnection:
-        """
-        Initialize and test database connection.
-
-        :return: Database connection instance
-        :raises: SystemExit if connection fails
-        """
-        self.logger.info("Testing database connection...")
-        if not self.db.test_connection():
-            self.logger.error("Database connection failed.")
-            raise SystemExit(1)
-        return self.db
 
     def _get_existing_row_ids(self) -> Set[int]:
         """

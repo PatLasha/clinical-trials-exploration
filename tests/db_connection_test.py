@@ -1,4 +1,3 @@
-import os
 import unittest
 from unittest.mock import MagicMock, Mock, mock_open, patch
 
@@ -18,7 +17,7 @@ class TestDBConnection(unittest.TestCase):
             file_path="/test/path.csv",
             chunk_size=1000,
             enable_backfill=True,
-            log_level="INFO"
+            log_level="INFO",
         )
 
     @patch("db.db_connection.create_engine")
@@ -30,12 +29,10 @@ class TestDBConnection(unittest.TestCase):
         self.assertEqual(db.db_url, self.test_settings.db_url)
         mock_create_engine.assert_called_once_with(self.test_settings.db_url)
         mock_sessionmaker.assert_called_once_with(bind=mock_engine)
-        
+
         # Test with missing db_url
         empty_settings = Settings(
-            db_url="",  # Empty URL should raise RuntimeError
-            entry_point="test",
-            file_path="/test/path.csv"
+            db_url="", entry_point="test", file_path="/test/path.csv"  # Empty URL should raise RuntimeError
         )
         with self.assertRaises(RuntimeError):
             DBConnection(empty_settings)

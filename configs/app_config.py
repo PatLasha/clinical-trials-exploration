@@ -19,7 +19,9 @@ class AppConfig:
     def __init__(self):
         try:
             if not os.getenv("DB_URL") or not os.getenv("ENTRY_POINT") or not os.getenv("FILE_PATH"):
-                raise RuntimeError("Required environment variables are missing. Please set DB_URL, ENTRY_POINT, and FILE_PATH.")
+                raise RuntimeError(
+                    "Required environment variables are missing. Please set DB_URL, ENTRY_POINT, and FILE_PATH."
+                )
 
             self.settings = Settings(
                 db_url=os.getenv("DB_URL", ""),
@@ -32,7 +34,6 @@ class AppConfig:
             self.setup_logging()
         except Exception as e:
             raise e
-        
 
     def setup_logging(self):
         """Setup logging configuration with file and console output."""
@@ -40,50 +41,44 @@ class AppConfig:
             # Ensure logs directory exists
             logs_dir = "logs"
             os.makedirs(logs_dir, exist_ok=True)
-            
+
             # Get current date for log filename
             current_date = datetime.now().strftime("%d-%m-%Y")
             log_filename = f"log-{current_date}.log"
             log_filepath = os.path.join(logs_dir, log_filename)
-            
+
             # Set log level, default to INFO if not specified or invalid
             log_level = getattr(logging, (self.settings.log_level or "INFO").upper(), logging.INFO)
-            
+
             # Create formatter
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
             # Get root logger
             root_logger = logging.getLogger()
             root_logger.setLevel(log_level)
-            
+
             # Clear any existing handlers to avoid duplication
             root_logger.handlers.clear()
-            
+
             # Create file handler with daily rotation
             file_handler = TimedRotatingFileHandler(
-                log_filepath,
-                when='midnight',
-                interval=1,
-                backupCount=30,  # Keep 30 days of logs
-                encoding='utf-8'
+                log_filepath, when="midnight", interval=1, backupCount=30, encoding="utf-8"  # Keep 30 days of logs
             )
             file_handler.setLevel(log_level)
             file_handler.setFormatter(formatter)
-            
+
             # Create console handler
             console_handler = logging.StreamHandler()
             console_handler.setLevel(log_level)
             console_handler.setFormatter(formatter)
-            
+
             # Add handlers to root logger
             root_logger.addHandler(file_handler)
             root_logger.addHandler(console_handler)
-            
+
             # Log the initial setup message
             logging.info(f"Logging initialized. Logs will be saved to: {log_filepath}")
-            
+
         except Exception as e:
             # Fallback to basic logging if file setup fails
             logging.basicConfig(

@@ -2,7 +2,8 @@ import logging
 
 from dotenv import load_dotenv
 from sqlalchemy import Engine, create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
+
 from configs.app_config import AppConfig
 from data_models.settings import Settings
 
@@ -43,9 +44,7 @@ class DBConnection:
             with open(file_path, "r") as f:
                 sql_commands = f.read()
 
-            raw_conn = (
-                self.engine.raw_connection()
-            )  # Get raw connection for executing multiple statements
+            raw_conn = self.engine.raw_connection()  # Get raw connection for executing multiple statements
             try:
                 cursor = raw_conn.cursor()
                 cursor.execute(sql_commands)

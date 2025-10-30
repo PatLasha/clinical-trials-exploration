@@ -1,11 +1,12 @@
+import logging
 import os
 import sys
-import logging
 
 from data_models.settings import Settings
 from db.db_connection import DBConnection
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 def init_db(settings: Settings):
     """
@@ -15,7 +16,7 @@ def init_db(settings: Settings):
     logger = logging.getLogger(__name__)
     db = DBConnection(settings)
 
-    try:  
+    try:
         logger.info("Initializing database schema...")
         if not db.test_connection():
             logger.error("Cannot initialize database schema: Database connection failed.")

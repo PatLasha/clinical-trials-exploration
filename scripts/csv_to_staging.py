@@ -163,6 +163,6 @@ class CSVToStagingLoader:
 
 if __name__ == "__main__":
     configs = AppConfig()
-    configs.settings.file_path = "data/raw/clin_trials.csv" # Example file path
+    configs.settings.file_path = "data/raw/clin_trials.csv"  # Example file path
     loader = CSVToStagingLoader(configs.settings)
     loader.process()

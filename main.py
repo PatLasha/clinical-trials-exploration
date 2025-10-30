@@ -1,7 +1,9 @@
+import logging
+
 from configs.app_config import AppConfig
 from scripts.csv_to_staging import CSVToStagingLoader
 from scripts.init_db import init_db
-import logging
+
 
 def main():
     """
@@ -12,7 +14,7 @@ def main():
         # Initialize application configuration
         app_config = AppConfig()
         logger = logging.getLogger(__name__)
-        
+
         logger.info(f"Application started with entry point: {app_config.settings.entry_point}")
         if app_config.settings.entry_point == "csv_to_staging":
             loader = CSVToStagingLoader(app_config.settings)
@@ -25,6 +27,7 @@ def main():
 
     except Exception as e:
         raise e
-    
+
+
 if __name__ == "__main__":
     main()

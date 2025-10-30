@@ -19,14 +19,14 @@ class TestCSVToStagingLoader(unittest.TestCase):
         """Set up test data paths and settings."""
         self.test_data_dir = os.path.join(os.path.dirname(__file__), "test_data")
         self.test_csv_path = os.path.join(self.test_data_dir, "clin_trials_test.csv")
-        
+
         self.test_settings = Settings(
             db_url="postgresql://test:test@localhost:5432/test_db",
             entry_point="test_entry",
             file_path=self.test_csv_path,
             chunk_size=100,
             enable_backfill=False,
-            log_level="INFO"
+            log_level="INFO",
         )
 
     def test_database_connection_failure(self):
@@ -66,15 +66,15 @@ class TestCSVToStagingLoader(unittest.TestCase):
             file_path=self.test_csv_path,
             chunk_size=100,
             enable_backfill=True,
-            log_level="INFO"
+            log_level="INFO",
         )
-        
+
         with patch("scripts.csv_to_staging.DBConnection") as mock_db_class:
             with patch("scripts.csv_to_staging.StudiesCSVParser"):
                 mock_db = Mock()
                 mock_db.test_connection.return_value = True
                 mock_db_class.return_value = mock_db
-                
+
                 # Mock the existing row IDs query
                 mock_engine = Mock()
                 mock_db.get_engine.return_value = mock_engine
@@ -134,9 +134,9 @@ class TestCSVToStagingLoader(unittest.TestCase):
             file_path="nonexistent_file.csv",
             chunk_size=100,
             enable_backfill=False,
-            log_level="INFO"
+            log_level="INFO",
         )
-        
+
         with patch("scripts.csv_to_staging.DBConnection") as mock_db_class:
             mock_db = Mock()
             mock_db.test_connection.return_value = True

@@ -24,7 +24,7 @@ class TestInitDB(unittest.TestCase):
             file_path="/test/path.csv",
             chunk_size=1000,
             enable_backfill=True,
-            log_level="INFO"
+            log_level="INFO",
         )
 
     @patch("db.db_connection.create_engine")
@@ -37,7 +37,7 @@ class TestInitDB(unittest.TestCase):
         mock_raw.cursor.return_value = mock_cursor
         mock_engine.raw_connection.return_value = mock_raw
         mock_create_engine.return_value = mock_engine
-        
+
         db = DBConnection(self.test_settings)
         schemas = Path(__file__).resolve().parents[1] / "db" / "schemas"
         self.assertTrue(schemas.exists())
@@ -55,11 +55,13 @@ class TestInitDB(unittest.TestCase):
         with patch("logging.getLogger") as mock_logger:
             mock_logger_instance = Mock()
             mock_logger.return_value = mock_logger_instance
-            
+
             init_db(self.test_settings)
-            
+
             # Verify that error was logged
-            mock_logger_instance.error.assert_called_with("Cannot initialize database schema: Database connection failed.")
+            mock_logger_instance.error.assert_called_with(
+                "Cannot initialize database schema: Database connection failed."
+            )
 
 
 if __name__ == "__main__":

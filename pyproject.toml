@@ -9,6 +9,10 @@ exclude = '''
     \.venv
     |\.git
     |__pycache__
+    |db_data
+    |\.env
+    |venv
+    |logs
 )/
 '''
 
@@ -25,7 +29,11 @@ known_third_party = [
 skip = [
     ".venv",
     ".git",
-    "__pycache__"
+    "__pycache__",
+    "db_data",
+    ".env",
+    "venv",
+    "logs",
 ]
 
 [tool.coverage.run]

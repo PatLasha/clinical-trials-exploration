@@ -1,8 +1,10 @@
-import os
+import logging
 
 from dotenv import load_dotenv
 from sqlalchemy import Engine, create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+
+from data_models.settings import Settings
 
 load_dotenv()
 
@@ -12,19 +14,25 @@ class DBConnection:
     Database connection class to manage connections to the PostgreSQL database.
     """
 
-    def __init__(self):
-        self.db_url = os.environ.get("DB_URL")
+    def __init__(self, settings: Settings):
+        self.db_url = settings.db_url
+        self.logger = logging.getLogger(__name__)
 
         if not self.db_url:
+            self.logger.error("DB_URL environment variable is not set.")
             raise RuntimeError("DB_URL environment variable is not set. Cannot connect to the database.")
-        self.engine = create_engine(self.db_url)
-        # Create a configured "Session" class
-        self.LocalSession = sessionmaker(bind=self.engine)
+        try:
+            self.engine = create_engine(self.db_url)
+            # Create a configured "Session" class
+            self.LocalSession = sessionmaker(bind=self.engine)
+        except Exception as e:
+            self.logger.error(f"Error creating database engine: {e}")
+            raise
 
     def get_engine(self) -> Engine:
         return self.engine
 
-    def get_session(self) -> sessionmaker:
+    def get_session(self) -> Session:
         return self.LocalSession()
 
     def execute_sql_file(self, file_path: str):
@@ -36,9 +44,7 @@ class DBConnection:
             with open(file_path, "r") as f:
                 sql_commands = f.read()
 
-            raw_conn = (
-                self.engine.raw_connection()
-            )  # Get raw connection for executing multiple statements
+            raw_conn = self.engine.raw_connection()  # Get raw connection for executing multiple statements
             try:
                 cursor = raw_conn.cursor()
                 cursor.execute(sql_commands)
@@ -47,8 +53,8 @@ class DBConnection:
                 cursor.close()
                 raw_conn.close()
         except Exception as e:
-            print(f"Error executing SQL file {file_path}: {e}")
-            raise e
+            self.logger.error(f"Error executing SQL file {file_path}: {e}")
+            raise
 
     def test_connection(self) -> bool:
         """
@@ -57,13 +63,16 @@ class DBConnection:
         try:
             with self.engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
-            print("Database connection successful.")
+            self.logger.info("Database connection successful.")
             return True
         except Exception as e:
-            print(f"Database connection failed: {e}")
+            self.logger.error(f"Database connection failed: {e}")
             return False
 
 
 if __name__ == "__main__":
-    db = DBConnection()
+    from configs.app_config import AppConfig
+
+    configs = AppConfig()
+    db = DBConnection(configs.settings)
     db.test_connection()

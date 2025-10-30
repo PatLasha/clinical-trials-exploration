@@ -1,5 +1,6 @@
 import json
 from typing import Iterator
+import logging
 
 import pandas as pd
 
@@ -11,6 +12,7 @@ class StudiesCSVParser:
         self.file_path = file_path
         self.chunk_size = chunk_size
         self.batch_id = str(pd.Timestamp.now().timestamp()).replace(".", "")
+        self.logger = logging.getLogger(__name__)
 
     def parse_csv(self) -> Iterator[StudiesRaw]:
         """
@@ -18,9 +20,9 @@ class StudiesCSVParser:
         :return: Iterator of StudiesRaw instances.
         """
         for chunk_num, chunk in enumerate(pd.read_csv(self.file_path, chunksize=self.chunk_size)):
-            print(f"Processed chunk {chunk_num + 1} with {len(chunk)} records.")
+            self.logger.info(f"Processed chunk {chunk_num + 1} with {len(chunk)} records.")
             yield from self.chunk_to_raw_data(chunk)
-        print("Completed parsing the CSV file.")
+        self.logger.info("Completed parsing the CSV file.")
 
     def chunk_to_raw_data(self, chunk: pd.DataFrame) -> Iterator[StudiesRaw]:
         """
@@ -51,7 +53,8 @@ class StudiesCSVParser:
             batch_id=self.batch_id,
             source_file=self.file_path,  # Store the source file path
             raw_data=json.dumps(cleaned_row_dict),  # Store the entire row as raw data
-            row_id=cleaned_row_dict.get("Unnamed: 0"),  # Assuming this is the row ID
+            # FIXME: row_id mapping works for now, but should be replaced with actual unique identifier from the dataset
+            row_id=cleaned_row_dict.get("Unnamed: 0"),
             org_name=cleaned_row_dict.get("Organization Full Name"),
             org_class=cleaned_row_dict.get("Organization Class"),
             responsible_party=cleaned_row_dict.get("Responsible Party"),
@@ -75,4 +78,4 @@ class StudiesCSVParser:
 if __name__ == "__main__":
     parser = StudiesCSVParser("data/raw/clin_trials.csv")
     for study in parser.parse_csv():
-        print(study)
+        parser.logger.info(study)

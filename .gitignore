@@ -8,3 +8,5 @@ db_data/
 __pycache__/
 .env
 venv/
+logs/*
+.coverage

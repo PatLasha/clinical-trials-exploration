@@ -89,7 +89,13 @@ clinical-trials-exploration/
 │       └── clin_trials.csv          # Source CSV data
 ├── data_models/                      # Data models and schemas
 │   ├── settings.py                   # Settings dataclass definition
-│   └── studies_raw.py               # Raw studies data model
+│   ├── studies_raw.py               # Raw studies dataclass model
+│   ├── base.py                       # SQLAlchemy declarative base
+│   └── table_models/                 # SQLAlchemy ORM models
+│       ├── README.md                 # Table models documentation
+│       ├── base.py                   # SQLAlchemy declarative base
+│       ├── raw_studies.py            # Staging schema models
+│       └── processed_data.py         # Processed schema models (14 tables)
 ├── db/                              # Database related code
 │   ├── db_connection.py             # Database connection management
 │   └── schemas/                     # SQL schema definitions
@@ -101,6 +107,7 @@ clinical-trials-exploration/
 │   └── log-DD-MM-YYYY.log          # Daily log files (format: log-DD-MM-YYYY.log)
 ├── parsers/                         # Data parsing modules
 │   └── studies_csv_parser.py        # CSV file parser for clinical trials data
+├── processing/                      # Data processing modules (placeholder)
 ├── scripts/                         # Executable scripts
 │   ├── csv_to_staging.py           # CSV ingestion to staging tables
 │   ├── init_db.py                  # Database schema initialization
@@ -111,6 +118,7 @@ clinical-trials-exploration/
 │   ├── csv_to_staging_test.py       # Comprehensive CSV staging tests
 │   ├── db_connection_test.py        # Database connection tests
 │   ├── db_init_test.py             # Database initialization tests
+│   ├── raw_to_processed_test.py     # Raw to processed transformation tests
 │   └── test_data/                   # Test data files
 │       ├── clin_trials_empty.csv
 │       ├── clin_trials_malformed.csv
@@ -119,6 +127,7 @@ clinical-trials-exploration/
 ├── .env                             # Environment variables (not in git)
 ├── .env.example                     # Environment variables template
 ├── .gitignore                       # Git ignore rules
+├── .pre-commit-config.yaml          # Pre-commit hooks configuration
 ├── docker-compose.yaml              # Docker services configuration
 ├── main.py                          # Main application entry point
 ├── pyproject.toml                   # Python project configuration
@@ -138,19 +147,40 @@ clinical-trials-exploration/
 
 #### **Data Models (`data_models/`)**
 - **`settings.py`**: Dataclass defining application settings schema
-- **`studies_raw.py`**: Data model for raw clinical trials studies
+- **`studies_raw.py`**: Dataclass model for raw clinical trials studies
+- **`base.py`**: SQLAlchemy declarative base configuration
+- **`table_models/`**: SQLAlchemy ORM models for database tables
+  - **`raw_studies.py`**: ORM model for staging.raw_studies table
+  - **`processed_data.py`**: ORM models for processed schema (14 tables: lookup tables, main entities, and bridge tables)
+  - **`README.md`**: Comprehensive documentation of all table models and relationships
 
 #### **Database (`db/`)**
-- **`db_connection.py`**: SQLAlchemy-based database connection management with connection pooling
+- **`db_connection.py`**: SQLAlchemy-based database connection management with:
+  - Connection pooling and session management
+  - Context manager support for automatic session cleanup
+  - Batch retrieval methods (e.g., `get_raw_studies(batch_id)`)
+  - SQL file execution for schema initialization
 - **`schemas/`**: SQL scripts for database schema creation (staging, processed, and analytics layers)
 
 #### **Data Processing (`parsers/`, `scripts/`)**
 - **`parsers/`**: Modular data parsing components for different data sources
-- **`scripts/`**: Executable data pipeline scripts for ingestion and transformation
+- **`scripts/`**: Executable data pipeline scripts
+  - **`csv_to_staging.py`**: CSV ingestion to staging tables
+  - **`init_db.py`**: Database schema initialization
+  - **`raw_to_processed.py`**: Data transformation pipeline with batch processing capabilities:
+    - `get_all_raw_studies()`: Retrieve all raw studies
+    - `get_raw_studies(batch_id)`: Get studies for specific batch
+    - `get_studies_grouped_by_batch(batch_id)`: Group studies by batch
+    - `get_all_batch_ids()`: List all unique batch identifiers
+- **`processing/`**: Data processing modules directory (reserved for future transformation logic)
 
 #### **Testing (`tests/`)**
 - Comprehensive test suite with unit tests, integration tests, and test data
 - Tests adapted to work with the new configuration system using `Settings` dataclass
+- **New test files:**
+  - **`raw_to_processed_test.py`**: Unit tests for raw to processed data transformation (15 tests, 67% coverage)
+  - Updated **`db_connection_test.py`**: Tests for database connection with context manager support (8 tests, 88% coverage)
+- Test coverage tracking with coverage.py
 
 #### **Logging (`logs/`)**
 - Daily rotating log files with format: `log-DD-MM-YYYY.log`

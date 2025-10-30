@@ -1,0 +1,5 @@
+,Organization Full Name,Organization Class,Responsible Party,Brief Title,Full Title,Overall Status,Start Date,Standard Age,Conditions,Primary Purpose,Interventions,Intervention Description,Study Type,Phases,Outcome Measure,Medical Subject Headings
+0,Test Organization,,SPONSOR,Test Brief Title,Test Full Title,COMPLETED,2023-01-01,ADULT,Test Condition,TREATMENT,Test Intervention,Test Description,INTERVENTIONAL,PHASE1,Test Outcome,Test MeSH
+1,Another Organization,OTHER,,Test Brief 2,Test Full Title 2,ACTIVE,2023-02-01,CHILD,Another Condition,PREVENTION,Another Intervention,Another Description,OBSERVATIONAL,NA,Another Outcome,Another MeSH
+2,Incomplete Row,OTHER,SPONSOR,Brief Only
+missing_quotes,Organization "With Quotes",OTHER,SPONSOR,"Brief with quotes","Full title with quotes",COMPLETED,2023-03-01,ADULT,"Condition with quotes",TREATMENT,"Intervention with quotes","Description with quotes",INTERVENTIONAL,PHASE2,"Outcome with quotes","MeSH with quotes"

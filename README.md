@@ -331,6 +331,10 @@ coverage run -m unittest discover -s tests -p "*_test.py"
 - DB connection & schema initialization scripts: 2 hours
 - Data ingestion scripts: 3 hours
 - Unit tests & pre-commit setup: 2 hours
+- Documentation & README updates: 1 hours
+- Data models and ORM setup: 2 hours
+- Data processing logic: 2 hours
+- Total: ~20 hours
 
 ## Next Steps / TODOs
 - Finish implementing data transformation and processing logic

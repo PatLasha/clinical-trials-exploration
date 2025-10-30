@@ -4,7 +4,6 @@ from typing import Set
 import pandas as pd
 from sqlalchemy import text
 
-from configs.app_config import AppConfig
 from data_models.settings import Settings
 from db.db_connection import DBConnection
 from parsers.studies_csv_parser import StudiesCSVParser
@@ -150,6 +149,8 @@ class CSVToStagingLoader:
 
 
 if __name__ == "__main__":
+    from configs.app_config import AppConfig
+
     configs = AppConfig()
     configs.settings.file_path = "data/raw/clin_trials.csv"  # Example file path
     loader = CSVToStagingLoader(configs.settings)

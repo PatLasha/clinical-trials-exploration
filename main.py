@@ -26,6 +26,7 @@ def main():
             raise ValueError(f"Unknown entry point: {app_config.settings.entry_point}")
 
     except Exception as e:
+        logging.error(f"Application failed: {e}")
         raise e
 
 

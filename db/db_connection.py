@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
-from configs.app_config import AppConfig
 from data_models.settings import Settings
 
 load_dotenv()
@@ -71,6 +70,8 @@ class DBConnection:
 
 
 if __name__ == "__main__":
+    from configs.app_config import AppConfig
+
     configs = AppConfig()
     db = DBConnection(configs.settings)
     db.test_connection()

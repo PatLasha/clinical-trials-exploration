@@ -153,7 +153,7 @@ class TestCSVToStagingProcessor(unittest.TestCase):
                     processor._print_ingestion_summary(100, 50)
 
                     # Check that print was called multiple times
-                    self.assertTrue(mock_print.call_count > 0)
+                    self.assertGreater(mock_print.call_count, 0)
 
                     # Check that summary information was printed
                     print_args = [str(call) for call in mock_print.call_args_list]

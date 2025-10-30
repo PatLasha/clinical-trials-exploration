@@ -21,8 +21,10 @@ class AppConfig:
             self._validate_required_env_vars()
             self.settings = self._create_settings()
             self.setup_logging()
+            self.logger = logging.getLogger(__name__)
         except Exception as e:
-            raise e
+            self.logger.error(f"Failed to initialize AppConfig: {e}")
+            raise
 
     def _validate_required_env_vars(self):
         """Validate that all required environment variables are set."""
@@ -102,4 +104,4 @@ class AppConfig:
                 format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
             logging.error(f"Error setting up file logging: {e}. Using basic logging instead.")
-            raise e
+            raise

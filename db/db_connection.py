@@ -27,7 +27,7 @@ class DBConnection:
             self.LocalSession = sessionmaker(bind=self.engine)
         except Exception as e:
             self.logger.error(f"Error creating database engine: {e}")
-            raise e
+            raise
 
     def get_engine(self) -> Engine:
         return self.engine

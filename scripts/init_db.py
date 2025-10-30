@@ -41,7 +41,7 @@ def init_db(settings: Settings):
         logger.info("Database schema initialization completed.")
     except Exception as e:
         logger.error(f"Error during database initialization: {e}")
-        raise e
+        raise
 
 
 if __name__ == "__main__":

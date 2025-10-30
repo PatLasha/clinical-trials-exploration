@@ -155,7 +155,7 @@ class CSVToStagingLoader:
 
         except Exception as e:
             self.logger.error(f"Error parsing CSV file: {e}")
-            raise e
+            raise
 
 
 if __name__ == "__main__":

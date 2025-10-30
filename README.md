@@ -132,7 +132,7 @@ LOG_LEVEL options:
 - ERROR - Only errors and critical issues
 
 BATCH_SIZE - optional (default: 1000) - Number of records to process in each batch during data ingestion
-ENABLE_BACKFILL - optional (default: False) - Whether to backfill existing data during ingestion (True/False)
+ENABLE_BACKFILL - optional (default: True) - Whether to backfill existing data during ingestion (True/False)
 ENTRY_POINT - required - The main function to run, options:
 - csv_to_staging - Ingest CSV data to staging tables
 - init_db - Initialize database schema

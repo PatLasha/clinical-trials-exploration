@@ -18,22 +18,38 @@ class AppConfig:
 
     def __init__(self):
         try:
-            if not os.getenv("DB_URL") or not os.getenv("ENTRY_POINT") or not os.getenv("FILE_PATH"):
-                raise RuntimeError(
-                    "Required environment variables are missing. Please set DB_URL, ENTRY_POINT, and FILE_PATH."
-                )
-
-            self.settings = Settings(
-                db_url=os.getenv("DB_URL", ""),
-                entry_point=os.getenv("ENTRY_POINT", ""),
-                file_path=os.getenv("FILE_PATH", ""),
-                chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
-                enable_backfill=os.getenv("ENABLE_BACKFILL", "True").lower() in ("true", "1", "yes"),
-                log_level=os.getenv("LOG_LEVEL", "INFO"),
-            )
+            self._validate_required_env_vars()
+            self.settings = self._create_settings()
             self.setup_logging()
         except Exception as e:
             raise e
+
+    def _validate_required_env_vars(self):
+        """Validate that all required environment variables are set."""
+        required_vars = ["DB_URL", "ENTRY_POINT"]
+        missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+        # FILE_PATH is only required for csv_to_staging entry point
+        entry_point = os.getenv("ENTRY_POINT")
+        if entry_point == "csv_to_staging" and not os.getenv("FILE_PATH"):
+            missing_vars.append("FILE_PATH")
+
+        if missing_vars:
+            raise RuntimeError(
+                f"Required environment variables are missing: {', '.join(missing_vars)}. "
+                f"Please check your .env file."
+            )
+
+    def _create_settings(self):
+        """Create Settings object from environment variables."""
+        return Settings(
+            db_url=os.getenv("DB_URL", ""),
+            entry_point=os.getenv("ENTRY_POINT", ""),
+            file_path=os.getenv("FILE_PATH", ""),
+            chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
+            enable_backfill=os.getenv("ENABLE_BACKFILL", "True").lower() in ("true", "1", "yes"),
+            log_level=os.getenv("LOG_LEVEL", "INFO"),
+        )
 
     def setup_logging(self):
         """Setup logging configuration with file and console output."""

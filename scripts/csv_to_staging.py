@@ -20,11 +20,8 @@ class CSVToStagingLoader:
 
     def __init__(self, settings: Settings):
         """
-        Initialize the CSV to staging processor.
-
-        :param file_path: Path to the CSV file
-        :param chunk_size: Number of rows to process in each chunk
-        :param enable_backfill: If True, skip records that already exist based on row_id
+        Initialize the CSV to Staging Loader.
+        :param settings: Application settings containing DB connection info and CSV file path
         """
         self.settings = settings
         self.file_path = settings.file_path
@@ -34,7 +31,7 @@ class CSVToStagingLoader:
         self.logger = logging.getLogger(__name__)
 
         # Initialize database connection and parser
-        self.db = self._initialize_database_connection()
+        self._initialize_database_connection()
         self.parser = StudiesCSVParser(settings.file_path, settings.chunk_size)
 
         # Get existing row_ids for backfill logic

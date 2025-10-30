@@ -5,32 +5,40 @@ from unittest.mock import MagicMock, Mock, mock_open, patch
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
+from data_models.settings import Settings
 from db.db_connection import DBConnection
 
 
 class TestDBConnection(unittest.TestCase):
     def setUp(self):
-        self.orig_db_url = os.environ.get("DB_URL")
-        os.environ["DB_URL"] = "postgresql://test:test@localhost:5432/test_db"
-
-    def tearDown(self):
-        if self.orig_db_url is None:
-            os.environ.pop("DB_URL", None)
-        else:
-            os.environ["DB_URL"] = self.orig_db_url
+        """Set up test settings."""
+        self.test_settings = Settings(
+            db_url="postgresql://test:test@localhost:5432/test_db",
+            entry_point="test_entry",
+            file_path="/test/path.csv",
+            chunk_size=1000,
+            enable_backfill=True,
+            log_level="INFO"
+        )
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")
     def test_init_and_missing_db_url(self, mock_sessionmaker, mock_create_engine):
         mock_engine = Mock(spec=Engine)
         mock_create_engine.return_value = mock_engine
-        db = DBConnection()
-        self.assertEqual(db.db_url, os.environ["DB_URL"])
-        mock_create_engine.assert_called_once_with(os.environ["DB_URL"])
+        db = DBConnection(self.test_settings)
+        self.assertEqual(db.db_url, self.test_settings.db_url)
+        mock_create_engine.assert_called_once_with(self.test_settings.db_url)
         mock_sessionmaker.assert_called_once_with(bind=mock_engine)
-        os.environ.pop("DB_URL", None)
+        
+        # Test with missing db_url
+        empty_settings = Settings(
+            db_url="",  # Empty URL should raise RuntimeError
+            entry_point="test",
+            file_path="/test/path.csv"
+        )
         with self.assertRaises(RuntimeError):
-            DBConnection()
+            DBConnection(empty_settings)
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")
@@ -41,7 +49,7 @@ class TestDBConnection(unittest.TestCase):
         mock_session_instance = Mock(spec=Session)
         mock_session_class.return_value = mock_session_instance
         mock_sessionmaker.return_value = mock_session_class
-        db = DBConnection()
+        db = DBConnection(self.test_settings)
         self.assertIs(db.get_engine(), mock_engine)
         self.assertIsInstance(db.get_session(), Mock)
 
@@ -53,10 +61,12 @@ class TestDBConnection(unittest.TestCase):
         mock_engine.connect.return_value = MagicMock()
         mock_engine.connect.return_value.__enter__.return_value = MagicMock()
         mock_create_engine.return_value = mock_engine
-        db = DBConnection()
+        db = DBConnection(self.test_settings)
         self.assertTrue(db.test_connection())
         mock_engine.connect.side_effect = Exception("fail")
-        self.assertFalse(db.test_connection())
+        # Note: The new DBConnection raises exceptions instead of returning False
+        with self.assertRaises(Exception):
+            db.test_connection()
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")
@@ -70,12 +80,12 @@ class TestDBConnection(unittest.TestCase):
         mock_engine.raw_connection.return_value = mock_raw
         sql = "CREATE TABLE t (id INT);"
         with patch("builtins.open", mock_open(read_data=sql)):
-            db = DBConnection()
+            db = DBConnection(self.test_settings)
             db.execute_sql_file("/fake/path.sql")
             mock_engine.raw_connection.assert_called_once()
             mock_cursor.execute.assert_called_once_with(sql)
         # File not found
-        db = DBConnection()
+        db = DBConnection(self.test_settings)
         with self.assertRaises(FileNotFoundError):
             db.execute_sql_file("/no/such/file.sql")
         # SQL error
@@ -85,7 +95,7 @@ class TestDBConnection(unittest.TestCase):
         mock_raw.cursor.return_value = mock_cursor
         mock_engine.raw_connection.return_value = mock_raw
         with patch("builtins.open", mock_open(read_data="INVALID")):
-            db = DBConnection()
+            db = DBConnection(self.test_settings)
             with self.assertRaises(Exception):
                 db.execute_sql_file("/fake/path.sql")
             mock_cursor.close.assert_called_once()

@@ -1,7 +1,11 @@
 import logging
 import os
+from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 from dotenv import load_dotenv
+
+from data_models.settings import Settings
 
 load_dotenv()
 
@@ -13,17 +17,78 @@ class AppConfig:
     """
 
     def __init__(self):
-        self.db_url = os.environ.get("DB_URL")
-        self.log_level = os.environ.get("LOG_LEVEL", "INFO")
+        try:
+            if not os.getenv("DB_URL") or not os.getenv("ENTRY_POINT") or not os.getenv("FILE_PATH"):
+                raise RuntimeError("Required environment variables are missing. Please set DB_URL, ENTRY_POINT, and FILE_PATH.")
 
-    def get_db_url(self):
-        return self.db_url
+            self.settings = Settings(
+                db_url=os.getenv("DB_URL", ""),
+                entry_point=os.getenv("ENTRY_POINT", ""),
+                file_path=os.getenv("FILE_PATH", ""),
+                chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
+                enable_backfill=os.getenv("ENABLE_BACKFILL", "True").lower() in ("true", "1", "yes"),
+                log_level=os.getenv("LOG_LEVEL", "INFO"),
+            )
+            self.setup_logging()
+        except Exception as e:
+            raise e
+        
 
     def setup_logging(self):
-        """Setup logging configuration based on LOG_LEVEL environment variable."""
-        logging.basicConfig(
-            level=getattr(logging, self.log_level.upper()),
-            # format will look like: 2024-06-01 12:00:00,000 - root - INFO - This is a log message
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
-        logging.info("Logging configured successfully")
+        """Setup logging configuration with file and console output."""
+        try:
+            # Ensure logs directory exists
+            logs_dir = "logs"
+            os.makedirs(logs_dir, exist_ok=True)
+            
+            # Get current date for log filename
+            current_date = datetime.now().strftime("%d-%m-%Y")
+            log_filename = f"log-{current_date}.log"
+            log_filepath = os.path.join(logs_dir, log_filename)
+            
+            # Set log level, default to INFO if not specified or invalid
+            log_level = getattr(logging, (self.settings.log_level or "INFO").upper(), logging.INFO)
+            
+            # Create formatter
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            
+            # Get root logger
+            root_logger = logging.getLogger()
+            root_logger.setLevel(log_level)
+            
+            # Clear any existing handlers to avoid duplication
+            root_logger.handlers.clear()
+            
+            # Create file handler with daily rotation
+            file_handler = TimedRotatingFileHandler(
+                log_filepath,
+                when='midnight',
+                interval=1,
+                backupCount=30,  # Keep 30 days of logs
+                encoding='utf-8'
+            )
+            file_handler.setLevel(log_level)
+            file_handler.setFormatter(formatter)
+            
+            # Create console handler
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(log_level)
+            console_handler.setFormatter(formatter)
+            
+            # Add handlers to root logger
+            root_logger.addHandler(file_handler)
+            root_logger.addHandler(console_handler)
+            
+            # Log the initial setup message
+            logging.info(f"Logging initialized. Logs will be saved to: {log_filepath}")
+            
+        except Exception as e:
+            # Fallback to basic logging if file setup fails
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            )
+            logging.error(f"Error setting up file logging: {e}. Using basic logging instead.")
+            raise e

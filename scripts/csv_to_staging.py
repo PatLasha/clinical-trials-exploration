@@ -1,13 +1,16 @@
+import logging
 from typing import Set
 
 import pandas as pd
 from sqlalchemy import text
 
+from configs.app_config import AppConfig
+from data_models.settings import Settings
 from db.db_connection import DBConnection
 from parsers.studies_csv_parser import StudiesCSVParser
 
 
-class CSVToStagingProcessor:
+class CSVToStagingLoader:
     """
     A class to handle CSV ingestion into the staging.raw_studies table.
 
@@ -15,7 +18,7 @@ class CSVToStagingProcessor:
     database connections, handling backfill logic, and batch processing.
     """
 
-    def __init__(self, file_path: str, chunk_size: int = 1000, enable_backfill: bool = True):
+    def __init__(self, settings: Settings):
         """
         Initialize the CSV to staging processor.
 
@@ -23,17 +26,20 @@ class CSVToStagingProcessor:
         :param chunk_size: Number of rows to process in each chunk
         :param enable_backfill: If True, skip records that already exist based on row_id
         """
-        self.file_path = file_path
-        self.chunk_size = chunk_size
-        self.enable_backfill = enable_backfill
+        self.settings = settings
+        self.file_path = settings.file_path
+        self.chunk_size = settings.chunk_size
+        self.enable_backfill = settings.enable_backfill
+        self.db = DBConnection(settings)
+        self.logger = logging.getLogger(__name__)
 
         # Initialize database connection and parser
         self.db = self._initialize_database_connection()
-        self.parser = StudiesCSVParser(file_path, chunk_size)
+        self.parser = StudiesCSVParser(settings.file_path, settings.chunk_size)
 
         # Get existing row_ids for backfill logic
         self.existing_row_ids = set()
-        if enable_backfill:
+        if settings.enable_backfill:
             self.existing_row_ids = self._get_existing_row_ids()
 
     def _initialize_database_connection(self) -> DBConnection:
@@ -43,12 +49,11 @@ class CSVToStagingProcessor:
         :return: Database connection instance
         :raises: SystemExit if connection fails
         """
-        print("Testing database connection...")
-        db = DBConnection()
-        if not db.test_connection():
-            print("Database connection failed.")
+        self.logger.info("Testing database connection...")
+        if not self.db.test_connection():
+            self.logger.error("Database connection failed.")
             raise SystemExit(1)
-        return db
+        return self.db
 
     def _get_existing_row_ids(self) -> Set[int]:
         """
@@ -56,11 +61,11 @@ class CSVToStagingProcessor:
 
         :return: Set of existing row_ids
         """
-        print("Checking existing records for backfill logic...")
+        self.logger.info("Checking existing records for backfill logic...")
         with self.db.get_engine().connect() as conn:
             result = conn.execute(text("SELECT row_id FROM staging.raw_studies WHERE row_id IS NOT NULL"))
             existing_row_ids = {row[0] for row in result.fetchall()}
-        print(f"Found {len(existing_row_ids)} existing records in the database.")
+        self.logger.info(f"Found {len(existing_row_ids)} existing records in the database.")
         return existing_row_ids
 
     def _process_batch(self, batch: list, batch_count: int) -> None:
@@ -70,7 +75,7 @@ class CSVToStagingProcessor:
         :param batch: List of record dictionaries to insert
         :param batch_count: Current batch number for logging
         """
-        print(f"Processing batch {batch_count} with {len(batch)} records...")
+        self.logger.info(f"Processing batch {batch_count} with {len(batch)} records...")
         staging_df = pd.DataFrame(batch)
         staging_df.to_sql("raw_studies", con=self.db.get_engine(), schema="staging", if_exists="append", index=False)
 
@@ -82,11 +87,11 @@ class CSVToStagingProcessor:
         :param skipped_count: Number of existing records skipped
         """
         total_records = processed_count + skipped_count
-        print("\n=== Ingestion Summary ===")
-        print(f"Total records processed: {total_records}")
-        print(f"New records inserted: {processed_count}")
-        print(f"Existing records skipped: {skipped_count}")
-        print("Data successfully ingested into staging.raw_studies table.")
+        self.logger.info("\n=== Ingestion Summary ===")
+        self.logger.info(f"Total records processed: {total_records}")
+        self.logger.info(f"New records inserted: {processed_count}")
+        self.logger.info(f"Existing records skipped: {skipped_count}")
+        self.logger.info("Data successfully ingested into staging.raw_studies table.")
 
     def _prepare_record_for_insertion(self, studies_raw) -> bool:
         """
@@ -133,7 +138,7 @@ class CSVToStagingProcessor:
         # Process any remaining records in the final batch
         if batch:
             batch_count += 1
-            print(f"Processing final batch {batch_count} with {len(batch)} records...")
+            self.logger.info(f"Processing final batch {batch_count} with {len(batch)} records...")
             self._process_batch(batch, batch_count)
 
         return processed_count, skipped_count
@@ -152,22 +157,12 @@ class CSVToStagingProcessor:
             self._print_ingestion_summary(processed_count, skipped_count)
 
         except Exception as e:
-            print(f"Error parsing CSV file: {e}")
+            self.logger.error(f"Error parsing CSV file: {e}")
             raise e
 
 
-def csv_to_staging(file_path: str, chunk_size: int = 1000, enable_backfill: bool = True):
-    """
-    Convenience function to process CSV file using the CSVToStagingProcessor class.
-
-    :param file_path: Path to the CSV file
-    :param chunk_size: Number of rows to process in each chunk
-    :param enable_backfill: If True, skip records that already exist based on row_id
-    """
-    processor = CSVToStagingProcessor(file_path, chunk_size, enable_backfill)
-    processor.process()
-
-
 if __name__ == "__main__":
-    csv_file_path = "data/raw/clin_trials.csv"  # Update with your CSV file path
-    csv_to_staging(csv_file_path)
+    configs = AppConfig()
+    configs.settings.file_path = "data/raw/clin_trials.csv" # Example file path
+    loader = CSVToStagingLoader(configs.settings)
+    loader.process()

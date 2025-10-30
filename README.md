@@ -118,8 +118,26 @@ POSTGRES_PORT=5432
 
 # Application Configuration
 LOG_LEVEL=INFO
+BATCH_SIZE=1000
+ENABLE_BACKFILL=True
+ENTRY_POINT=csv_to_staging
+FILE_PATH=file/path/example.csv
+# ENTRY_POINT=init_db
 DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
 ```
+
+LOG_LEVEL options:
+- DEBUG - Shows all messages
+- INFO - Default level, shows info, warnings, and errors
+- ERROR - Only errors and critical issues
+
+BATCH_SIZE - optional (default: 1000) - Number of records to process in each batch during data ingestion
+ENABLE_BACKFILL - optional (default: False) - Whether to backfill existing data during ingestion (True/False)
+ENTRY_POINT - required - The main function to run, options:
+- csv_to_staging - Ingest CSV data to staging tables
+- init_db - Initialize database schema
+- TODO: add other entry points as implemented
+FILE_PATH - required only with csv_to_staging - Path to the CSV file to ingest (used with csv_to_staging)
 
 ### 2. Pre-commit Setup
 
@@ -202,10 +220,16 @@ coverage run -m unittest discover -s tests -p "*_test.py"
 - Data ingestion scripts: 3 hours
 - Unit tests & pre-commit setup: 2 hours
 
-### Future Improvements / TODOs
+## Future Improvements / TODOs
 - Finish implementing configs, for logging and for environment variable handling
 - Change logging statements throughout the codebase to use the logging module (moving logs to a file would be a good start)
-- Add unit tests
 - Improve error handling and add validation
-- Create data ingestion and processing scripts
+- Improve data ingestion performance for large datasets
+- Implement data transformation and processing logic
+- Implement analytics layer with aggregations and metrics
+- Create parser for JSON API data ingestion for: https://clinicaltrials.gov/api/v2/studies
+- Create parser for XML data ingestion for: https://www.kaggle.com/datasets/skylord/all-clinical-trials
+- Implement data enrichment (standardization, derived fields)
+- Create tests for data ingestion and processing
+- Optimize database queries and indexing
 - Create Streamlit app for data exploration and visualization

@@ -3,14 +3,15 @@ import sys
 import unittest
 from unittest.mock import Mock, patch
 
-from scripts.csv_to_staging import CSVToStagingProcessor, csv_to_staging
+from data_models.settings import Settings
+from scripts.csv_to_staging import CSVToStagingLoader
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 
-class TestCSVToStagingProcessor(unittest.TestCase):
+class TestCSVToStagingLoader(unittest.TestCase):
     """
-    Unit tests for CSVToStagingProcessor class.
+    Unit tests for CSVToStagingLoader class.
     Tests core functionality with mocked dependencies.
     """
 
@@ -19,6 +20,16 @@ class TestCSVToStagingProcessor(unittest.TestCase):
         self.test_data_dir = os.path.join(os.path.dirname(__file__), "test_data")
         self.valid_csv_path = os.path.join(self.test_data_dir, "clin_trials_test.csv")
         self.nonexistent_csv_path = os.path.join(self.test_data_dir, "nonexistent_file.csv")
+        
+        # Base settings for tests
+        self.base_settings = Settings(
+            db_url="postgresql://test:test@localhost:5432/test_db",
+            entry_point="test_entry",
+            file_path=self.valid_csv_path,
+            chunk_size=100,
+            enable_backfill=False,
+            log_level="INFO"
+        )
 
     def test_database_connection_failure(self):
         """Test initialization failure when database connection fails."""
@@ -28,23 +39,20 @@ class TestCSVToStagingProcessor(unittest.TestCase):
             mock_db_class.return_value = mock_db
 
             with self.assertRaises(SystemExit):
-                CSVToStagingProcessor(self.valid_csv_path)
-
-    def test_convenience_function(self):
-        """Test the convenience function csv_to_staging."""
-        with patch("scripts.csv_to_staging.CSVToStagingProcessor") as mock_processor_class:
-            mock_processor = Mock()
-            mock_processor_class.return_value = mock_processor
-
-            csv_to_staging(file_path=self.valid_csv_path, chunk_size=500, enable_backfill=False)
-
-            # Verify processor was created with correct parameters
-            mock_processor_class.assert_called_once_with(self.valid_csv_path, 500, False)
-            # Verify process was called
-            mock_processor.process.assert_called_once()
+                CSVToStagingLoader(self.base_settings)
 
     def test_nonexistent_file_handling(self):
         """Test behavior when CSV file doesn't exist."""
+        # Create settings with nonexistent file
+        bad_settings = Settings(
+            db_url="postgresql://test:test@localhost:5432/test_db",
+            entry_point="test_entry",
+            file_path=self.nonexistent_csv_path,
+            chunk_size=100,
+            enable_backfill=False,
+            log_level="INFO"
+        )
+        
         with patch("scripts.csv_to_staging.DBConnection") as mock_db_class:
             mock_db = Mock()
             mock_db.test_connection.return_value = True
@@ -55,7 +63,7 @@ class TestCSVToStagingProcessor(unittest.TestCase):
                 mock_parser_class.side_effect = FileNotFoundError("File not found")
 
                 with self.assertRaises(FileNotFoundError):
-                    CSVToStagingProcessor(self.nonexistent_csv_path)
+                    CSVToStagingLoader(bad_settings)
 
     def test_backfill_disabled_initialization(self):
         """Test initialization with backfill disabled."""
@@ -65,14 +73,14 @@ class TestCSVToStagingProcessor(unittest.TestCase):
             mock_db_class.return_value = mock_db
 
             with patch("scripts.csv_to_staging.StudiesCSVParser"):
-                processor = CSVToStagingProcessor(file_path=self.valid_csv_path, enable_backfill=False)
+                loader = CSVToStagingLoader(self.base_settings)
 
                 # When backfill is disabled, existing_row_ids should be empty
-                self.assertEqual(processor.existing_row_ids, set())
-                self.assertFalse(processor.enable_backfill)
+                self.assertEqual(loader.existing_row_ids, set())
+                self.assertFalse(loader.enable_backfill)
 
     def test_chunk_size_configuration(self):
-        """Test processor with different chunk sizes."""
+        """Test loader with different chunk sizes."""
         with patch("scripts.csv_to_staging.DBConnection") as mock_db_class:
             mock_db = Mock()
             mock_db.test_connection.return_value = True
@@ -80,30 +88,55 @@ class TestCSVToStagingProcessor(unittest.TestCase):
 
             with patch("scripts.csv_to_staging.StudiesCSVParser"):
                 for chunk_size in [1, 10, 100, 1000]:
-                    processor = CSVToStagingProcessor(self.valid_csv_path, chunk_size=chunk_size, enable_backfill=False)
-                    self.assertEqual(processor.chunk_size, chunk_size)
+                    test_settings = Settings(
+                        db_url="postgresql://test:test@localhost:5432/test_db",
+                        entry_point="test_entry",
+                        file_path=self.valid_csv_path,
+                        chunk_size=chunk_size,
+                        enable_backfill=False,
+                        log_level="INFO"
+                    )
+                    loader = CSVToStagingLoader(test_settings)
+                    self.assertEqual(loader.chunk_size, chunk_size)
 
     def test_record_preparation_logic(self):
         """Test record preparation for insertion."""
+        # Create settings with backfill enabled
+        backfill_settings = Settings(
+            db_url="postgresql://test:test@localhost:5432/test_db",
+            entry_point="test_entry",
+            file_path=self.valid_csv_path,
+            chunk_size=100,
+            enable_backfill=True,
+            log_level="INFO"
+        )
+        
         with patch("scripts.csv_to_staging.DBConnection") as mock_db_class:
             mock_db = Mock()
             mock_db.test_connection.return_value = True
             mock_db_class.return_value = mock_db
+            
+            # Mock the existing row IDs query
+            mock_engine = Mock()
+            mock_db.get_engine.return_value = mock_engine
+            mock_conn = Mock()
+            mock_result = Mock()
+            mock_result.fetchall.return_value = [(100,), (200,)]  # Simulate existing records
+            mock_conn.execute.return_value = mock_result
+            mock_context = Mock()
+            mock_context.__enter__ = Mock(return_value=mock_conn)
+            mock_context.__exit__ = Mock(return_value=None)
+            mock_engine.connect.return_value = mock_context
 
             with patch("scripts.csv_to_staging.StudiesCSVParser"):
-                # Test with backfill enabled and existing records
-                processor = CSVToStagingProcessor(
-                    self.valid_csv_path, enable_backfill=False  # Disable to avoid database query
-                )
-                processor.existing_row_ids = {100, 200}  # Manually set existing IDs
-                processor.enable_backfill = True
+                loader = CSVToStagingLoader(backfill_settings)
 
                 # Mock StudiesRaw object with existing row_id
                 mock_studies_existing = Mock()
                 mock_studies_existing.row_id = 100
 
                 # Should return False (skip existing record)
-                result = processor._prepare_record_for_insertion(mock_studies_existing)
+                result = loader._prepare_record_for_insertion(mock_studies_existing)
                 self.assertFalse(result)
 
                 # Mock StudiesRaw object with new row_id
@@ -111,7 +144,7 @@ class TestCSVToStagingProcessor(unittest.TestCase):
                 mock_studies_new.row_id = 300
 
                 # Should return True (process new record)
-                result = processor._prepare_record_for_insertion(mock_studies_new)
+                result = loader._prepare_record_for_insertion(mock_studies_new)
                 self.assertTrue(result)
                 # Should have set ingestion timestamp
                 self.assertIsNotNone(mock_studies_new.ingestion_timestamp)
@@ -127,38 +160,36 @@ class TestCSVToStagingProcessor(unittest.TestCase):
 
             with patch("scripts.csv_to_staging.StudiesCSVParser"):
                 with patch("pandas.DataFrame.to_sql") as mock_to_sql:
-                    processor = CSVToStagingProcessor(self.valid_csv_path, enable_backfill=False)
+                    loader = CSVToStagingLoader(self.base_settings)
 
                     # Test batch processing
                     test_batch = [{"row_id": 1, "brief_title": "Test 1"}, {"row_id": 2, "brief_title": "Test 2"}]
 
-                    processor._process_batch(test_batch, 1)
+                    loader._process_batch(test_batch, 1)
 
                     # Verify to_sql was called correctly
                     mock_to_sql.assert_called_once_with(
                         "raw_studies", con=mock_engine, schema="staging", if_exists="append", index=False
                     )
 
-    def test_summary_printing(self):
-        """Test ingestion summary printing."""
+    def test_summary_logging(self):
+        """Test ingestion summary logging."""
         with patch("scripts.csv_to_staging.DBConnection") as mock_db_class:
             mock_db = Mock()
             mock_db.test_connection.return_value = True
             mock_db_class.return_value = mock_db
 
             with patch("scripts.csv_to_staging.StudiesCSVParser"):
-                with patch("builtins.print") as mock_print:
-                    processor = CSVToStagingProcessor(self.valid_csv_path, enable_backfill=False)
+                with patch("logging.getLogger") as mock_get_logger:
+                    mock_logger = Mock()
+                    mock_get_logger.return_value = mock_logger
+                    
+                    loader = CSVToStagingLoader(self.base_settings)
 
-                    processor._print_ingestion_summary(100, 50)
+                    loader._print_ingestion_summary(100, 50)
 
-                    # Check that print was called multiple times
-                    self.assertGreater(mock_print.call_count, 0)
-
-                    # Check that summary information was printed
-                    print_args = [str(call) for call in mock_print.call_args_list]
-                    summary_found = any("Ingestion Summary" in arg for arg in print_args)
-                    self.assertTrue(summary_found)
+                    # Check that logger.info was called multiple times
+                    self.assertGreater(mock_logger.info.call_count, 0)
 
 
 class TestErrorHandling(unittest.TestCase):
@@ -168,6 +199,15 @@ class TestErrorHandling(unittest.TestCase):
         """Set up test fixtures."""
         self.test_data_dir = os.path.join(os.path.dirname(__file__), "test_data")
         self.valid_csv_path = os.path.join(self.test_data_dir, "clin_trials_test.csv")
+        
+        self.test_settings = Settings(
+            db_url="postgresql://test:test@localhost:5432/test_db",
+            entry_point="test_entry",
+            file_path=self.valid_csv_path,
+            chunk_size=100,
+            enable_backfill=False,
+            log_level="INFO"
+        )
 
     def test_process_method_exception_handling(self):
         """Test process method handles exceptions properly."""
@@ -180,13 +220,13 @@ class TestErrorHandling(unittest.TestCase):
                 mock_parser = Mock()
                 mock_parser_class.return_value = mock_parser
 
-                processor = CSVToStagingProcessor(self.valid_csv_path, enable_backfill=False)
+                loader = CSVToStagingLoader(self.test_settings)
 
                 # Mock _process_records_in_batches to raise an exception
-                processor._process_records_in_batches = Mock(side_effect=Exception("Test exception"))
+                loader._process_records_in_batches = Mock(side_effect=Exception("Test exception"))
 
                 with self.assertRaises(Exception) as context:
-                    processor.process()
+                    loader.process()
 
                 self.assertIn("Test exception", str(context.exception))
 

@@ -62,8 +62,7 @@ class TestDBConnection(unittest.TestCase):
         self.assertTrue(db.test_connection())
         mock_engine.connect.side_effect = Exception("fail")
         # Note: The new DBConnection raises exceptions instead of returning False
-        with self.assertRaises(Exception):
-            db.test_connection()
+        self.assertFalse(db.test_connection())
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")

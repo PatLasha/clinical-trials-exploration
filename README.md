@@ -75,9 +75,91 @@ This architecture follows a modern data engineering pattern with:
 
 This repository contains a clinical-trial data pipeline and UI. Below are recommended steps to set up local development and production (runtime) environments.
 
-## Files
-- `requirements.txt` — production / runtime dependencies (minimal).
-- `requirements-dev.txt` — development dependencies (includes `-r requirements.txt`).
+## Project Structure
+
+```
+clinical-trials-exploration/
+├── configs/                          # Configuration management
+│   └── app_config.py                 # Main application configuration & logging setup
+├── data/                             # Data storage directory
+│   ├── notebooks/                    # Jupyter notebooks for exploration
+│   │   └── explore_clin_trials_csv.ipynb
+│   ├── processed/                    # Processed/cleaned data files
+│   └── raw/                          # Raw data files
+│       └── clin_trials.csv          # Source CSV data
+├── data_models/                      # Data models and schemas
+│   ├── settings.py                   # Settings dataclass definition
+│   └── studies_raw.py               # Raw studies data model
+├── db/                              # Database related code
+│   ├── db_connection.py             # Database connection management
+│   └── schemas/                     # SQL schema definitions
+│       ├── create_processed_tables.sql  # Production tables
+│       ├── create_schemas.sql           # Database schemas
+│       └── create_staging_tables.sql    # Staging/raw tables
+├── db_data/                         # Database data directory (Docker volumes)
+├── logs/                            # Application logs (auto-generated)
+│   └── log-DD-MM-YYYY.log          # Daily log files (format: log-DD-MM-YYYY.log)
+├── parsers/                         # Data parsing modules
+│   └── studies_csv_parser.py        # CSV file parser for clinical trials data
+├── scripts/                         # Executable scripts
+│   ├── csv_to_staging.py           # CSV ingestion to staging tables
+│   ├── init_db.py                  # Database schema initialization
+│   └── raw_to_processed.py         # Data transformation pipeline
+├── tests/                           # Unit tests
+│   ├── csv_integration_test.py      # Integration tests for CSV processing
+│   ├── csv_to_staging_simple_test.py # Simple unit tests for CSV staging
+│   ├── csv_to_staging_test.py       # Comprehensive CSV staging tests
+│   ├── db_connection_test.py        # Database connection tests
+│   ├── db_init_test.py             # Database initialization tests
+│   └── test_data/                   # Test data files
+│       ├── clin_trials_empty.csv
+│       ├── clin_trials_malformed.csv
+│       ├── clin_trials_test.csv
+│       └── clin_trials_wrong_headers.csv
+├── .env                             # Environment variables (not in git)
+├── .env.example                     # Environment variables template
+├── .gitignore                       # Git ignore rules
+├── docker-compose.yaml              # Docker services configuration
+├── main.py                          # Main application entry point
+├── pyproject.toml                   # Python project configuration
+├── requirements.txt                 # Production dependencies (minimal)
+└── requirements-dev.txt             # Development dependencies
+```
+
+### Key Components
+
+#### **Data Directory (`data/`)**
+- **`notebooks/`**: Jupyter notebooks for data exploration and prototyping
+- **`raw/`**: Place your raw data files here (e.g., `clin_trials.csv`)
+- **`processed/`**: Processed/cleaned data files
+
+#### **Configuration (`configs/`)**
+- **`app_config.py`**: Centralized configuration management with environment variable validation and logging setup. Supports daily log rotation and handles different entry points (csv_to_staging, init_db).
+
+#### **Data Models (`data_models/`)**
+- **`settings.py`**: Dataclass defining application settings schema
+- **`studies_raw.py`**: Data model for raw clinical trials studies
+
+#### **Database (`db/`)**
+- **`db_connection.py`**: SQLAlchemy-based database connection management with connection pooling
+- **`schemas/`**: SQL scripts for database schema creation (staging, processed, and analytics layers)
+
+#### **Data Processing (`parsers/`, `scripts/`)**
+- **`parsers/`**: Modular data parsing components for different data sources
+- **`scripts/`**: Executable data pipeline scripts for ingestion and transformation
+
+#### **Testing (`tests/`)**
+- Comprehensive test suite with unit tests, integration tests, and test data
+- Tests adapted to work with the new configuration system using `Settings` dataclass
+
+#### **Logging (`logs/`)**
+- Daily rotating log files with format: `log-DD-MM-YYYY.log`
+- Dual output: console and file logging
+- Configurable log levels (DEBUG, INFO, WARNING, ERROR)
+
+### Dependencies
+- **`requirements.txt`**: Production/runtime dependencies (minimal for deployment)
+- **`requirements-dev.txt`**: Development dependencies (includes testing, linting, formatting tools)
 
 ## Quick start (recommended: use a virtual environment)
 

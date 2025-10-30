@@ -19,6 +19,7 @@ class DBConnection:
         self.logger = logging.getLogger(__name__)
 
         if not self.db_url:
+            self.logger.error("DB_URL environment variable is not set.")
             raise RuntimeError("DB_URL environment variable is not set. Cannot connect to the database.")
         try:
             self.engine = create_engine(self.db_url)

@@ -148,39 +148,15 @@ class TestProcessRawData(unittest.TestCase):
 
         self.assertIn("Database connection error", str(context.exception))
 
-    def test_get_studies_grouped_by_batch_all_batches(self):
-        """Test grouping all studies by batch_id."""
-        # Setup mock session
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_query.all.return_value = self.sample_studies
-        mock_session.query.return_value = mock_query
-        mock_session.__enter__ = Mock(return_value=mock_session)
-        mock_session.__exit__ = Mock(return_value=False)
-
-        self.mock_db.get_session.return_value = mock_session
-
-        # Execute test
-        result = self.processor.get_studies_grouped_by_batch()
-
-        # Assertions
-        self.assertEqual(len(result), 3)  # 3 unique batch IDs
-        self.assertIn("batch_001", result)
-        self.assertIn("batch_002", result)
-        self.assertIn("batch_003", result)
-        self.assertEqual(len(result["batch_001"]), 2)
-        self.assertEqual(len(result["batch_002"]), 2)
-        self.assertEqual(len(result["batch_003"]), 1)
-
-    def test_get_studies_grouped_by_batch_specific_batch(self):
-        """Test grouping studies for a specific batch_id."""
-        batch_002_studies = [s for s in self.sample_studies if s.batch_id == "batch_002"]
+    def test_get_studies_grouped_by_batch_success(self):
+        """Test grouping studies by specific batch_id."""
+        batch_001_studies = [s for s in self.sample_studies if s.batch_id == "batch_001"]
 
         # Setup mock session
         mock_session = MagicMock()
         mock_query = MagicMock()
         mock_where = MagicMock()
-        mock_where.all.return_value = batch_002_studies
+        mock_where.all.return_value = batch_001_studies
         mock_query.where.return_value = mock_where
         mock_session.query.return_value = mock_query
         mock_session.__enter__ = Mock(return_value=mock_session)
@@ -189,41 +165,24 @@ class TestProcessRawData(unittest.TestCase):
         self.mock_db.get_session.return_value = mock_session
 
         # Execute test
-        result = self.processor.get_studies_grouped_by_batch("batch_002")
+        result = self.processor.get_studies_grouped_by_batch("batch_001")
 
         # Assertions
-        self.assertEqual(len(result), 1)  # Only batch_002
-        self.assertIn("batch_002", result)
-        self.assertEqual(len(result["batch_002"]), 2)
+        self.assertEqual(len(result), 1)  # Only one batch in dictionary
+        self.assertIn("batch_001", result)
+        self.assertEqual(len(result["batch_001"]), 2)
+        self.assertTrue(all(s.batch_id == "batch_001" for s in result["batch_001"]))
 
-    def test_get_studies_grouped_by_batch_with_none_batch_id(self):
-        """Test grouping when a study has None as batch_id."""
-        # Add study with None batch_id
-        study_with_none = self._create_mock_study(6, None, "Study 6", "Active")
-        studies_with_none = self.sample_studies + [study_with_none]
+    def test_get_studies_grouped_by_batch_different_batch(self):
+        """Test grouping studies for a different batch_id."""
+        batch_003_studies = [s for s in self.sample_studies if s.batch_id == "batch_003"]
 
         # Setup mock session
         mock_session = MagicMock()
         mock_query = MagicMock()
-        mock_query.all.return_value = studies_with_none
-        mock_session.query.return_value = mock_query
-        mock_session.__enter__ = Mock(return_value=mock_session)
-        mock_session.__exit__ = Mock(return_value=False)
-
-        self.mock_db.get_session.return_value = mock_session
-
-        # Execute test and verify exception
-        with self.assertRaises(ValueError) as context:
-            self.processor.get_studies_grouped_by_batch()
-
-        self.assertIn("has no batch_id", str(context.exception))
-
-    def test_get_studies_grouped_by_batch_empty(self):
-        """Test grouping when no studies exist."""
-        # Setup mock session
-        mock_session = MagicMock()
-        mock_query = MagicMock()
-        mock_query.all.return_value = []
+        mock_where = MagicMock()
+        mock_where.all.return_value = batch_003_studies
+        mock_query.where.return_value = mock_where
         mock_session.query.return_value = mock_query
         mock_session.__enter__ = Mock(return_value=mock_session)
         mock_session.__exit__ = Mock(return_value=False)
@@ -231,10 +190,42 @@ class TestProcessRawData(unittest.TestCase):
         self.mock_db.get_session.return_value = mock_session
 
         # Execute test
-        result = self.processor.get_studies_grouped_by_batch()
+        result = self.processor.get_studies_grouped_by_batch("batch_003")
 
         # Assertions
-        self.assertEqual(len(result), 0)
+        self.assertEqual(len(result), 1)  # Only batch_003
+        self.assertIn("batch_003", result)
+        self.assertEqual(len(result["batch_003"]), 1)
+
+    def test_get_studies_grouped_by_batch_with_none_batch_id(self):
+        """Test grouping when batch_id parameter is None."""
+        # Execute test and verify exception
+        with self.assertRaises(ValueError) as context:
+            self.processor.get_studies_grouped_by_batch(None)
+
+        self.assertIn("batch_id must be provided", str(context.exception))
+
+    def test_get_studies_grouped_by_batch_empty(self):
+        """Test grouping when no studies exist for the given batch_id."""
+        # Setup mock session
+        mock_session = MagicMock()
+        mock_query = MagicMock()
+        mock_where = MagicMock()
+        mock_where.all.return_value = []
+        mock_query.where.return_value = mock_where
+        mock_session.query.return_value = mock_query
+        mock_session.__enter__ = Mock(return_value=mock_session)
+        mock_session.__exit__ = Mock(return_value=False)
+
+        self.mock_db.get_session.return_value = mock_session
+
+        # Execute test
+        result = self.processor.get_studies_grouped_by_batch("nonexistent_batch")
+
+        # Assertions
+        self.assertEqual(len(result), 1)  # Dictionary with one key
+        self.assertIn("nonexistent_batch", result)
+        self.assertEqual(len(result["nonexistent_batch"]), 0)  # Empty list
         self.assertIsInstance(result, dict)
 
     def test_get_all_batch_ids_success(self):

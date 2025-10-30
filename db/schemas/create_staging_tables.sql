@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS staging.raw_studies (
     brief_title TEXT,
     full_title TEXT,
     overall_status VARCHAR(50),
-    start_date DATE,
+    start_date VARCHAR(50),
     standard_age VARCHAR(50),
     conditions TEXT,
     primary_purpose VARCHAR(50),

@@ -36,4 +36,4 @@ class StudiesRaw:
         Convert the dataclass instance to a dictionary, excluding None values.
         :return: Dictionary representation of the dataclass.
         """
-        return {k: v for k, v in dataclasses.asdict(self).items() if v is not None}
+        return dataclasses.asdict(self)

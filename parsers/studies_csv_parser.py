@@ -14,8 +14,8 @@ class StudiesCSVParser:
 
     def parse_csv(self) -> Iterator[StudiesRaw]:
         """
-        Parse the CSV file in chunks and add a batch_id column.
-        :return: DataFrame containing the parsed data with batch_id.
+        Parse the CSV file in chunks and convert each row to StudiesRaw dataclass instances.
+        :return: Iterator of StudiesRaw instances.
         """
         for chunk_num, chunk in enumerate(pd.read_csv(self.file_path, chunksize=self.chunk_size)):
             print(f"Processed chunk {chunk_num + 1} with {len(chunk)} records.")
@@ -24,42 +24,50 @@ class StudiesCSVParser:
 
     def chunk_to_raw_data(self, chunk: pd.DataFrame) -> Iterator[StudiesRaw]:
         """
-        Convert a DataFrame chunk to an iterator of raw data dictionaries.
+        Convert a DataFrame chunk to an iterator of StudiesRaw instances.
         :param chunk: DataFrame chunk.
-        :return: Iterator of dictionaries representing raw data.
+        :return: Iterator of StudiesRaw instances.
         """
         yield from (self.row_to_studies(row) for _, row in chunk.iterrows())
 
     def row_to_studies(self, row: pd.Series) -> StudiesRaw:
         """
-        Convert a DataFrame row to a StudiesRaw dataclass instance.
+        Convert a DataFrame row to a StudiesRaw instance.
         :param row: DataFrame row.
         :return: StudiesRaw instance.
         """
         row_dict = row.to_dict()
 
+        # Replace NaN values with None for proper JSON serialization
+        cleaned_row_dict = {}
+        for key, value in row_dict.items():
+            if pd.isna(value):
+                cleaned_row_dict[key] = None
+            else:
+                cleaned_row_dict[key] = value
+
         # Map CSV columns to dataclass fields
         studies_raw = StudiesRaw(
             batch_id=self.batch_id,
-            ingestion_timestamp=None,  # Will be set during ingestion
-            raw_data=json.dumps(row_dict),  # Store the entire row as raw data
-            row_id=row_dict.get("Unnamed: 0"),  # Assuming this is the row ID
-            org_name=row_dict.get("Organization Full Name"),
-            org_class=row_dict.get("Organization Class"),
-            responsible_party=row_dict.get("Responsible Party"),
-            brief_title=row_dict.get("Brief Title"),
-            full_title=row_dict.get("Full Title"),
-            overall_status=row_dict.get("Overall Status"),
-            start_date=row_dict.get("Start Date"),
-            standard_age=row_dict.get("Standard Age"),
-            conditions=row_dict.get("Conditions"),
-            primary_purpose=row_dict.get("Primary Purpose"),
-            interventions=row_dict.get("Interventions"),
-            intervention_description=row_dict.get("Intervention Description"),
-            study_type=row_dict.get("Study Type"),
-            phase=row_dict.get("Phases"),
-            outcome_measure=row_dict.get("Outcome Measure"),
-            medical_subject_heading=row_dict.get("Medical Subject Headings"),
+            source_file=self.file_path,  # Store the source file path
+            raw_data=json.dumps(cleaned_row_dict),  # Store the entire row as raw data
+            row_id=cleaned_row_dict.get("Unnamed: 0"),  # Assuming this is the row ID
+            org_name=cleaned_row_dict.get("Organization Full Name"),
+            org_class=cleaned_row_dict.get("Organization Class"),
+            responsible_party=cleaned_row_dict.get("Responsible Party"),
+            brief_title=cleaned_row_dict.get("Brief Title"),
+            full_title=cleaned_row_dict.get("Full Title"),
+            overall_status=cleaned_row_dict.get("Overall Status"),
+            start_date=cleaned_row_dict.get("Start Date"),
+            standard_age=cleaned_row_dict.get("Standard Age"),
+            conditions=cleaned_row_dict.get("Conditions"),
+            primary_purpose=cleaned_row_dict.get("Primary Purpose"),
+            interventions=cleaned_row_dict.get("Interventions"),
+            intervention_description=cleaned_row_dict.get("Intervention Description"),
+            study_type=cleaned_row_dict.get("Study Type"),
+            phase=cleaned_row_dict.get("Phases"),
+            outcome_measure=cleaned_row_dict.get("Outcome Measure"),
+            medical_subject_heading=cleaned_row_dict.get("Medical Subject Headings"),
         )
         return studies_raw
 

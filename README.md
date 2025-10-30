@@ -15,16 +15,16 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
 │   CSV Files     │   JSON API      │   SQL Database              │
 │     (Local)     │ (ClinicalTrials)│   (PostgreSQL)              │
 └────────┬────────┴────────┬────────┴──────────┬──────────────────┘
-         │                 │                    │
-         v                 v                    v
+         │                 │                   │
+         v                 v                   v
 ┌─────────────────────────────────────────────────────────────────┐
 │                    INGESTION LAYER (Python)                     │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │  CSV Loader     │  API Connector  │  DB Connector               │
 │  (pandas)       │  (requests)     │  (SQLAlchemy)               │
 └────────┬────────┴────────┬────────┴──────────┬──────────────────┘
-         │                 │                    │
-         v                 v                    v
+         │                 │                   │
+         v                 v                   v
 ┌─────────────────────────────────────────────────────────────────┐
 │                   STAGING LAYER (Raw Zone)                      │
 │                    PostgreSQL - staging schema                  │
@@ -40,8 +40,8 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
 │ - Duplicates    │  - Constraints  │  - Derived Fields           │
 │ - Formatting    │  - Business     │  - Lookups                  │
 └────────┬────────┴────────┬────────┴──────────┬──────────────────┘
-         │                 │                    │
-         v                 v                    v
+         │                 │                   │
+         v                 v                   v
 ┌─────────────────────────────────────────────────────────────────┐
 │                 PROCESSED LAYER (Gold Zone)                     │
 │                PostgreSQL - processed schema                    │
@@ -56,8 +56,8 @@ Exploring public clinical trials dataset as a part of the DE tech challenge.
 │  (Materialized  │  (Pre-computed) │  (SQL Views)                │
 │   Views)        │                 │                             │
 └────────┬────────┴────────┬────────┴──────────┬──────────────────┘
-         │                 │                    │
-         v                 v                    v
+         │                 │                   │
+         v                 v                   v
 ┌─────────────────────────────────────────────────────────────────┐
 │                   PRESENTATION LAYER                            │
 │                   Streamlit Web Interface                       │
@@ -176,6 +176,12 @@ python scripts/init_db.py
 python scripts/db_connection.py
 ```
 
+## Running Unit Tests
+Run unit tests with coverage:
+```bash
+coverage run -m unittest discover -s tests -p "*_test.py"
+```
+
 ## Design Decision Breakdown
 
 ### Data Processing
@@ -188,9 +194,13 @@ python scripts/db_connection.py
 ### Web Framework
 - **Streamlit** it seems like a good fit for quickly building data exploration UIs and dashboards with minimal code.
 
-## Time Alocation Breakdown
-- Initial Setup & Research: 2-3 hours
-- Database Schema Design & Setup: 4 hours (setting up PostgreSQL with Docker and creating schemas took some time, as I had to learn Docker basics)
+## Time Allocation Breakdown
+- Initial Setup & Research: 3 hours
+- Docker & PostgreSQL Setup: 3 hours (it took a while to get Docker working properly on my machine, as I had to learn some basics)
+- DB schema design: 2 hours
+- DB connection & schema initialization scripts: 2 hours
+- Data ingestion scripts: 3 hours
+- Unit tests & pre-commit setup: 2 hours
 
 ### Future Improvements / TODOs
 - Finish implementing configs, for logging and for environment variable handling

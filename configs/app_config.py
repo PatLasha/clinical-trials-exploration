@@ -50,7 +50,7 @@ class AppConfig:
                 entry_point=os.getenv("ENTRY_POINT", ""),
                 file_path=os.getenv("FILE_PATH", ""),
                 chunk_size=int(os.getenv("CHUNK_SIZE", 1000)),
-                enable_backfill=bool(os.getenv("ENABLE_BACKFILL", True)),
+                enable_backfill=os.getenv("ENABLE_BACKFILL", "true").lower() == "true",
                 log_level=os.getenv("LOG_LEVEL", "INFO"),
             )
         except Exception as e:

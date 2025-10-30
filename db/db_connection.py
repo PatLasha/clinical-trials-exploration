@@ -66,7 +66,7 @@ class DBConnection:
             return True
         except Exception as e:
             self.logger.error(f"Database connection failed: {e}")
-            raise
+            return False
 
 
 if __name__ == "__main__":

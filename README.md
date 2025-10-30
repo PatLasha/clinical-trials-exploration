@@ -302,16 +302,14 @@ coverage run -m unittest discover -s tests -p "*_test.py"
 - Data ingestion scripts: 3 hours
 - Unit tests & pre-commit setup: 2 hours
 
-## Future Improvements / TODOs
-- Finish implementing configs, for logging and for environment variable handling
-- Change logging statements throughout the codebase to use the logging module (moving logs to a file would be a good start)
-- Improve error handling and add validation
-- Improve data ingestion performance for large datasets
-- Implement data transformation and processing logic
+## Next Steps / TODOs
+- Finish implementing data transformation and processing logic
+- Implement data enrichment (standardization, derived fields)
+- Add data validation and error handling
 - Implement analytics layer with aggregations and metrics
 - Create parser for JSON API data ingestion for: https://clinicaltrials.gov/api/v2/studies
 - Create parser for XML data ingestion for: https://www.kaggle.com/datasets/skylord/all-clinical-trials
-- Implement data enrichment (standardization, derived fields)
+- Improve data ingestion performance for large datasets
 - Create tests for data ingestion and processing
 - Optimize database queries and indexing
 - Create Streamlit app for data exploration and visualization

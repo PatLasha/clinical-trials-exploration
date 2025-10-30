@@ -5,6 +5,7 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from data_models.settings import Settings
+from data_models.table_models.raw_studies import RawStudies
 
 load_dotenv()
 
@@ -54,6 +55,27 @@ class DBConnection:
                 raw_conn.close()
         except Exception as e:
             self.logger.error(f"Error executing SQL file {file_path}: {e}")
+            raise
+
+    def get_raw_studies(self, batch_id: str) -> list[RawStudies]:
+        """
+        Retrieve raw studies from the staging schema by batch_id.
+
+        :param batch_id: The batch identifier to filter studies.
+        :return: List of RawStudies objects for the specified batch.
+        """
+        try:
+            session = self.get_session()
+            try:
+                # Query for all raw studies with the given batch_id
+                studies = session.query(RawStudies).filter(RawStudies.batch_id == batch_id).all()
+
+                self.logger.info(f"Retrieved {len(studies)} raw studies for batch_id: {batch_id}")
+                return studies
+            finally:
+                session.close()
+        except Exception as e:
+            self.logger.error(f"Error retrieving raw studies for batch_id {batch_id}: {e}")
             raise
 
     def test_connection(self) -> bool:

@@ -65,15 +65,12 @@ class DBConnection:
         :return: List of RawStudies objects for the specified batch.
         """
         try:
-            session = self.get_session()
-            try:
+            with self.get_session() as session:
                 # Query for all raw studies with the given batch_id
                 studies = session.query(RawStudies).filter(RawStudies.batch_id == batch_id).all()
 
                 self.logger.info(f"Retrieved {len(studies)} raw studies for batch_id: {batch_id}")
                 return studies
-            finally:
-                session.close()
         except Exception as e:
             self.logger.error(f"Error retrieving raw studies for batch_id {batch_id}: {e}")
             raise

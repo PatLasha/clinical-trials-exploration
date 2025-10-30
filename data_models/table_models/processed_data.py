@@ -1,10 +1,9 @@
 from datetime import datetime
 
-from base import Base
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-# Lookup Tables (Reference Data)
+from data_models.table_models.base import Base
 
 
 class OrgClass(Base):

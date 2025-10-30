@@ -39,24 +39,6 @@ class ProcessRawData:
             self.logger.error(f"Error retrieving raw studies for batch_id {batch_id}: {e}")
             raise
 
-    def get_studies_grouped_by_batch(self, batch_id: Optional[str]) -> dict[str, list[RawStudies]]:
-        """
-        Retrieve raw studies grouped by batch_id.
-        :param batch_id: Optional batch ID to filter studies.
-        :return: Dictionary with batch_id as keys and list of RawStudies as values.
-        """
-        if batch_id is None:
-            self.logger.error("batch_id must be provided to group studies.")
-            raise ValueError("batch_id must be provided to group studies.")
-        try:
-            with self.db.get_session() as session:
-                query = session.query(RawStudies).where(RawStudies.batch_id == batch_id)
-                studies = query.all()
-            return {batch_id: studies}
-        except Exception as e:
-            self.logger.error(f"Error grouping studies by batch_id: {e}")
-            raise
-
     def get_all_batch_ids(self) -> list[str]:
         """
         Get all unique batch IDs from the raw_studies table.
@@ -86,4 +68,4 @@ if __name__ == "__main__":
 
     for batch_id in batch_ids:
         studies = processor.get_raw_studies(batch_id)
-        grouped_studies = processor.get_studies_grouped_by_batch(batch_id)
+        print(f"Batch ID: {batch_id}, Number of Studies: {len(studies)}")

@@ -102,12 +102,15 @@ class TestDBConnection(unittest.TestCase):
     @patch("db.db_connection.sessionmaker")
     def test_get_raw_studies_success(self, mock_sessionmaker, mock_create_engine):
         """Test successful retrieval of raw studies by batch_id."""
-        # Setup mock engine and session
+        # Setup mock engine
         mock_engine = Mock(spec=Engine)
         mock_create_engine.return_value = mock_engine
 
-        # Create mock session and query
+        # Create mock session with context manager support
         mock_session = MagicMock(spec=Session)
+        mock_session.__enter__ = Mock(return_value=mock_session)
+        mock_session.__exit__ = Mock(return_value=False)
+
         mock_session_class = Mock()
         mock_session_class.return_value = mock_session
         mock_sessionmaker.return_value = mock_session_class
@@ -139,17 +142,20 @@ class TestDBConnection(unittest.TestCase):
         self.assertEqual(result[0].batch_id, "batch_123")
         self.assertEqual(result[1].batch_id, "batch_123")
         mock_session.query.assert_called_once_with(RawStudies)
-        mock_session.close.assert_called_once()
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")
     def test_get_raw_studies_empty_result(self, mock_sessionmaker, mock_create_engine):
         """Test retrieval when no studies match the batch_id."""
-        # Setup mock engine and session
+        # Setup mock engine
         mock_engine = Mock(spec=Engine)
         mock_create_engine.return_value = mock_engine
 
+        # Create mock session with context manager support
         mock_session = MagicMock(spec=Session)
+        mock_session.__enter__ = Mock(return_value=mock_session)
+        mock_session.__exit__ = Mock(return_value=False)
+
         mock_session_class = Mock()
         mock_session_class.return_value = mock_session
         mock_sessionmaker.return_value = mock_session_class
@@ -168,17 +174,20 @@ class TestDBConnection(unittest.TestCase):
         # Assertions
         self.assertEqual(len(result), 0)
         self.assertIsInstance(result, list)
-        mock_session.close.assert_called_once()
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")
     def test_get_raw_studies_database_error(self, mock_sessionmaker, mock_create_engine):
         """Test error handling when database query fails."""
-        # Setup mock engine and session
+        # Setup mock engine
         mock_engine = Mock(spec=Engine)
         mock_create_engine.return_value = mock_engine
 
+        # Create mock session with context manager support
         mock_session = MagicMock(spec=Session)
+        mock_session.__enter__ = Mock(return_value=mock_session)
+        mock_session.__exit__ = Mock(return_value=False)
+
         mock_session_class = Mock()
         mock_session_class.return_value = mock_session
         mock_sessionmaker.return_value = mock_session_class
@@ -192,17 +201,20 @@ class TestDBConnection(unittest.TestCase):
             db.get_raw_studies("batch_123")
 
         self.assertIn("Database connection error", str(context.exception))
-        mock_session.close.assert_called_once()
 
     @patch("db.db_connection.create_engine")
     @patch("db.db_connection.sessionmaker")
     def test_get_raw_studies_session_cleanup(self, mock_sessionmaker, mock_create_engine):
         """Test that session is properly closed even when an error occurs."""
-        # Setup mock engine and session
+        # Setup mock engine
         mock_engine = Mock(spec=Engine)
         mock_create_engine.return_value = mock_engine
 
+        # Create mock session with context manager support
         mock_session = MagicMock(spec=Session)
+        mock_session.__enter__ = Mock(return_value=mock_session)
+        mock_session.__exit__ = Mock(return_value=False)
+
         mock_session_class = Mock()
         mock_session_class.return_value = mock_session
         mock_sessionmaker.return_value = mock_session_class
@@ -217,8 +229,9 @@ class TestDBConnection(unittest.TestCase):
         with self.assertRaises(Exception):
             db.get_raw_studies("batch_123")
 
-        # Verify session was closed despite the error
-        mock_session.close.assert_called_once()
+        # Verify session context manager was used (enter/exit called)
+        mock_session.__enter__.assert_called_once()
+        mock_session.__exit__.assert_called_once()
 
 
 if __name__ == "__main__":

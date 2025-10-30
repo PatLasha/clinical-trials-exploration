@@ -310,6 +310,6 @@ coverage run -m unittest discover -s tests -p "*_test.py"
 - Create parser for JSON API data ingestion for: https://clinicaltrials.gov/api/v2/studies
 - Create parser for XML data ingestion for: https://www.kaggle.com/datasets/skylord/all-clinical-trials
 - Improve data ingestion performance for large datasets
-- Create tests for data ingestion and processing
+- Increase test coverage for data ingestion and processing
 - Optimize database queries and indexing
 - Create Streamlit app for data exploration and visualization

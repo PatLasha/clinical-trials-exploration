@@ -53,7 +53,7 @@ class DBConnection:
                 raw_conn.close()
         except Exception as e:
             self.logger.error(f"Error executing SQL file {file_path}: {e}")
-            raise e
+            raise
 
     def test_connection(self) -> bool:
         """
@@ -66,7 +66,7 @@ class DBConnection:
             return True
         except Exception as e:
             self.logger.error(f"Database connection failed: {e}")
-            raise e
+            raise
 
 
 if __name__ == "__main__":

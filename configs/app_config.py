@@ -44,14 +44,18 @@ class AppConfig:
 
     def _create_settings(self):
         """Create Settings object from environment variables."""
-        return Settings(
-            db_url=os.getenv("DB_URL", ""),
-            entry_point=os.getenv("ENTRY_POINT", ""),
-            file_path=os.getenv("FILE_PATH", ""),
-            chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
-            enable_backfill=os.getenv("ENABLE_BACKFILL", "True").lower() in ("true", "1", "yes"),
-            log_level=os.getenv("LOG_LEVEL", "INFO"),
-        )
+        try:
+            return Settings(
+                db_url=os.getenv("DB_URL", ""),
+                entry_point=os.getenv("ENTRY_POINT", ""),
+                file_path=os.getenv("FILE_PATH", ""),
+                chunk_size=int(os.getenv("CHUNK_SIZE", 1000)),
+                enable_backfill=bool(os.getenv("ENABLE_BACKFILL", True)),
+                log_level=os.getenv("LOG_LEVEL", "INFO"),
+            )
+        except Exception as e:
+            self.logger.error(f"Error creating Settings object: {e}")
+            raise
 
     def setup_logging(self):
         """Setup logging configuration with file and console output."""

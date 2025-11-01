@@ -3,6 +3,7 @@ from typing import Optional
 
 from data_models.table_models.raw_studies import RawStudies
 from db.db_connection import DBConnection
+from scripts.helpers import DataTransformer, DataValidator
 
 
 class ProcessRawData:
@@ -13,6 +14,8 @@ class ProcessRawData:
     def __init__(self, db: DBConnection):
         self.db = db
         self.logger = logging.getLogger(__name__)
+        self.validator = DataValidator()
+        self.transformer = DataTransformer()
 
     def get_all_raw_studies(self) -> list[RawStudies]:
         """
@@ -55,6 +58,40 @@ class ProcessRawData:
             self.logger.error(f"Error retrieving batch IDs: {e}")
             raise
 
+    def process_batch(self, batch_id: str) -> dict:
+        """
+        Validate and transform a batch of studies.
+        :param batch_id: The batch ID to process
+        :return: Dict with processing results
+        """
+        try:
+            # Get raw studies
+            raw_studies = self.get_raw_studies(batch_id)
+
+            # Validate
+            valid_studies, invalid_studies = self.validator.validate_batch(raw_studies)
+
+            # Transform valid studies
+            transformed_studies = []
+            for study in valid_studies:
+                transformed = self.transformer.transform_study(study)
+                transformed_studies.append(transformed)
+
+            self.logger.info(
+                f"Processed batch {batch_id}: {len(valid_studies)} valid, "
+                f"{len(invalid_studies)} invalid, {len(transformed_studies)} transformed"
+            )
+
+            return {
+                "batch_id": batch_id,
+                "valid_count": len(valid_studies),
+                "invalid_count": len(invalid_studies),
+                "transformed": transformed_studies,
+            }
+        except Exception as e:
+            self.logger.error(f"Error processing batch {batch_id}: {e}")
+            raise
+
 
 if __name__ == "__main__":
     from configs.app_config import AppConfig
@@ -67,5 +104,16 @@ if __name__ == "__main__":
     batch_ids = processor.get_all_batch_ids()
 
     for batch_id in batch_ids:
-        studies = processor.get_raw_studies(batch_id)
-        print(f"Batch ID: {batch_id}, Number of Studies: {len(studies)}")
+        result = processor.process_batch(batch_id)
+        print(f"\nBatch: {result['batch_id']}")
+        print(f"  Valid: {result['valid_count']}, Invalid: {result['invalid_count']}")
+        print(f"  Transformed: {result['valid_count']} studies")
+
+        # Example: Show first transformed study
+        if result["transformed"]:
+            first_study = result["transformed"][0]
+            print("\n  Sample transformed study:")
+            print(f"    Title: {first_study['brief_title']}")
+            print(f"    Conditions: {first_study['conditions']}")
+            print(f"    Interventions: {len(first_study['interventions'])} interventions")
+            print(f"    Age Groups: {first_study['age_groups']}")
